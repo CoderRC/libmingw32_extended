@@ -1,0 +1,107 @@
+# -------------------------------
+# Standard Autoconf-set variables
+# -------------------------------
+VPATH=@srcdir@:obj:lib
+
+build_alias=@build_noncanonical@
+build_vendor=@build_vendor@
+build_os=@build_os@
+build=@build@
+host_alias=@host_noncanonical@
+host_vendor=@host_vendor@
+host_os=@host_os@
+host=@host@
+target_alias=@target_noncanonical@
+target_vendor=@target_vendor@
+target_os=@target_os@
+target=@target@
+
+program_transform_name =@program_transform_name@
+
+prefix =@prefix@
+exec_prefix =@exec_prefix@
+
+srcdir =@srcdir@
+
+bindir =@bindir@
+sbindir =@sbindir@
+libexecdir =@libexecdir@
+datadir =@datadir@
+sysconfdir =@sysconfdir@
+sharedstatedir =@sharedstatedir@
+localstatedir =@localstatedir@
+libdir =@libdir@
+includedir =@includedir@
+oldincludedir =@oldincludedir@
+infodir =@infodir@
+datarootdir =@datarootdir@
+docdir =@docdir@
+pdfdir =@pdfdir@
+htmldir =@htmldir@
+mandir =@mandir@
+man1dir =$(mandir)/man1
+man2dir =$(mandir)/man2
+man3dir =$(mandir)/man3
+man4dir =$(mandir)/man4
+man5dir =$(mandir)/man5
+man6dir =$(mandir)/man6
+man7dir =$(mandir)/man7
+man8dir =$(mandir)/man8
+man9dir =$(mandir)/man9
+
+# -------------------------------------------------
+# Miscellaneous non-standard autoconf-set variables
+# -------------------------------------------------
+
+# The gcc driver likes to know the arguments it was configured with.
+TOPLEVEL_CONFIGURE_ARGUMENTS=@TOPLEVEL_CONFIGURE_ARGUMENTS@
+
+tooldir =@tooldir@
+build_tooldir =@build_tooldir@
+
+# This is the name of the environment variable used for the path to
+# the libraries.
+RPATH_ENVVAR =@RPATH_ENVVAR@
+
+# -------------------------------------------------
+# autoconf-set variables for making library
+# -------------------------------------------------
+CC=@CC@
+DEFS=@DEFS@
+DEFAULT_INCLUDES=$(notdir null/)
+INCLUDES=$(notdir null/)
+CPPFLAGS=@CPPFLAGS@
+CFLAGS=@CFLAGS@
+AR=@AR@
+ARFLAGS=r
+COPY=@COPY@
+OBJEXT=@OBJEXT@
+OBJECTS =@OBJECTS@
+SOURCES =@SOURCES@
+mkdir_p =@mkdir_p@
+
+# -------------------------------------------------
+# make file code
+# -------------------------------------------------
+
+all: compile_objects compile_library
+
+compile_objects: obj $(OBJECTS)
+
+$(OBJECTS): %.$(OBJEXT): source/%.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $< -o obj/$@
+
+obj:
+	$(mkdir_p) obj
+
+compile_library: lib lib/libmingw32_extended.a
+
+lib/libmingw32_extended.a: $(addprefix obj/, $(OBJECTS))
+	$(AR) $(ARFLAGS) lib/libmingw32_extended.a $?
+
+lib:
+	$(mkdir_p) lib
+
+install:
+	test -z "$(prefix)/lib" || $(mkdir_p) "$(prefix)/lib"
+	$(COPY) lib/* $(prefix)/lib
