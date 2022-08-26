@@ -80,6 +80,7 @@ mmap (void *__addr, size_t __len, int __prot, int __flags, int __fd,
 			     FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE,
 			     (off >> 31) >> 1, off, size, __addr);
       CloseHandle (hMapFile);
+      CloseHandle (hFile);
       if (buf == NULL)
 	{
 	  _set_errno (ENOMEM);
