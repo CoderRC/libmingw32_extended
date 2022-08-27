@@ -1,7 +1,7 @@
 configure_library ()
 {
-OBJECTS="pipe.\$(OBJEXT) wait.\$(OBJEXT)"
-SOURCES="\$(srcdir)/source/pipe.c \$(srcdir)/source/wait.c"
+OBJECTS="pipe.\$(OBJEXT) wait.\$(OBJEXT) mmap.\$(OBJEXT) munmap.\$(OBJEXT) msync.\$(OBJEXT) mlock.\$(OBJEXT) munlock.\$(OBJEXT) posix_madvise.\$(OBJEXT) madvise.\$(OBJEXT) shm_open.\$(OBJEXT) shm_unlink.\$(OBJEXT)"
+SOURCES="\$(srcdir)/source/pipe.c \$(srcdir)/source/wait.c \$(srcdir)/source/mmap.c \$(srcdir)/source/munmap.c \$(srcdir)/source/msync.c \$(srcdir)/source/mlock.c \$(srcdir)/source/munlock.c \$(srcdir)/source/posix_madvise.c \$(srcdir)/source/madvise.c \$(srcdir)/source/shm_open.c \$(srcdir)/source/shm_unlink.c"
 ac_subst_vars=$ac_subst_vars'
 OBJECTS
 SOURCES
@@ -396,7 +396,7 @@ if test -z "$ac_cv_prog_COPY" ; then
   fi
 fi
 
-for ac_header in fcntl.h windows.h sys/types.h errno.h unistd.h
+for ac_header in fcntl.h windows.h sys/types.h errno.h unistd.h sys/stat.h stdio.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
@@ -547,7 +547,7 @@ done
 
 
 
-for ac_header in tlhelp32.h
+for ac_header in tlhelp32.h psapi.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
