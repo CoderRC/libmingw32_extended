@@ -68,7 +68,7 @@ RPATH_ENVVAR =@RPATH_ENVVAR@
 # -------------------------------------------------
 CC=@CC@
 DEFS=@DEFS@
-DEFAULT_INCLUDES=$(notdir null/)
+DEFAULT_INCLUDES=-I@srcdir@/include
 INCLUDES=$(notdir null/)
 CPPFLAGS=@CPPFLAGS@
 CFLAGS=@CFLAGS@
