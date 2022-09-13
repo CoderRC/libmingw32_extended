@@ -78,13 +78,15 @@ COPY=@COPY@
 OBJEXT=@OBJEXT@
 OBJECTS =@OBJECTS@
 SOURCES =@SOURCES@
+INCLUDE_DIRECTORIES =@INCLUDE_DIRECTORIES@
+INCLUDE_FILES =@INCLUDE_FILES@
 mkdir_p =@mkdir_p@
 
 # -------------------------------------------------
 # make file code
 # -------------------------------------------------
 
-all: compile_objects compile_library
+all: compile_objects compile_library compile_include
 
 compile_objects: obj $(OBJECTS)
 
@@ -102,6 +104,16 @@ lib/libmingw32_extended.a: $(addprefix obj/, $(OBJECTS))
 lib:
 	$(mkdir_p) lib
 
+compile_include: $(addprefix $(CURDIR)/, $(INCLUDE_DIRECTORIES)) $(addprefix $(CURDIR)/, $(INCLUDE_FILES))
+
+$(addprefix $(CURDIR)/, $(INCLUDE_DIRECTORIES)):
+	$(mkdir_p) $@
+
+$(addprefix $(CURDIR)/, $(INCLUDE_FILES)): $(CURDIR)/%: %
+	$(COPY) $< $(@:$(CURDIR)/%=%)
+
 install:
 	test -z "$(prefix)/lib" || $(mkdir_p) "$(prefix)/lib"
 	$(COPY) lib/* $(prefix)/lib
+	test -z "$(prefix)/include" || $(mkdir_p) "$(prefix)/include"
+	$(COPY) include/* $(prefix)/include
