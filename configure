@@ -1,14 +1,36 @@
 configure_library ()
 {
-SOURCES="\$(srcdir)/source/pipe.c \$(srcdir)/source/wait.c \$(srcdir)/source/mmap.c \$(srcdir)/source/munmap.c \$(srcdir)/source/msync.c \$(srcdir)/source/mlock.c \$(srcdir)/source/munlock.c \$(srcdir)/source/posix_madvise.c \$(srcdir)/source/madvise.c \$(srcdir)/source/shm_open.c \$(srcdir)/source/shm_unlink.c"
-INCLUDE_DIRECTORIES="include include/sys"
-INCLUDE_FILES="include/sys/mman.h"
+SOURCES='
+\$(srcdir)/source/pipe.c
+\$(srcdir)/source/wait.c
+\$(srcdir)/source/mmap.c
+\$(srcdir)/source/munmap.c
+\$(srcdir)/source/msync.c
+\$(srcdir)/source/mlock.c
+\$(srcdir)/source/munlock.c
+\$(srcdir)/source/posix_madvise.c
+\$(srcdir)/source/madvise.c
+\$(srcdir)/source/shm_open.c
+\$(srcdir)/source/shm_unlink.c
+'
+INCLUDE_DIRECTORIES='
+include
+include/sys
+'
+INCLUDE_FILES='
+include/sys/mman.h
+'
 ac_subst_vars=$ac_subst_vars'
 SOURCES
 INCLUDE_DIRECTORIES
 INCLUDE_FILES
 mkdir_p
 COPY'
+
+SOURCES=`echo $SOURCES`
+INCLUDE_DIRECTORIES=`echo $INCLUDE_DIRECTORIES`
+INCLUDE_FILES=`echo $INCLUDE_FILES`
+
 if test -n "$mkdir_p"; then
   ac_cv_prog_mkdir_p=$mkdir_p
 elif test -n "$ac_cv_prog_mkdir_p"; then
