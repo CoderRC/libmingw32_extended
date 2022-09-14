@@ -1,11 +1,9 @@
 configure_library ()
 {
-OBJECTS="pipe.\$(OBJEXT) wait.\$(OBJEXT) mmap.\$(OBJEXT) munmap.\$(OBJEXT) msync.\$(OBJEXT) mlock.\$(OBJEXT) munlock.\$(OBJEXT) posix_madvise.\$(OBJEXT) madvise.\$(OBJEXT) shm_open.\$(OBJEXT) shm_unlink.\$(OBJEXT)"
 SOURCES="\$(srcdir)/source/pipe.c \$(srcdir)/source/wait.c \$(srcdir)/source/mmap.c \$(srcdir)/source/munmap.c \$(srcdir)/source/msync.c \$(srcdir)/source/mlock.c \$(srcdir)/source/munlock.c \$(srcdir)/source/posix_madvise.c \$(srcdir)/source/madvise.c \$(srcdir)/source/shm_open.c \$(srcdir)/source/shm_unlink.c"
 INCLUDE_DIRECTORIES="include include/sys"
 INCLUDE_FILES="include/sys/mman.h"
 ac_subst_vars=$ac_subst_vars'
-OBJECTS
 SOURCES
 INCLUDE_DIRECTORIES
 INCLUDE_FILES
