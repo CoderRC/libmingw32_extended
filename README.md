@@ -24,10 +24,18 @@ Download git to use the git command for cloning the source.
 
 Download gcc to compile the source and configure it.
 
-Download make to compile the libary.
+Download make to compile the library.
 
 If the bash command line environment supports the pacman command do
 
     pacman -S git
     pacman -S mingw-w64-x86_64-gcc
     pacman -S make
+
+## Contributing to the source
+
+To properly add new sources to the repository, the sources must be added to the source directory in the repository and in the configure file add paths to the SOURCES.
+
+To properly add new include directories to the repository, the include directories must be added to the include directory in the repository and in the configure file add include paths to the INCLUDE_DIRECTORIES.
+
+To properly add new headers to the repository, the headers must be added to the include directory in the repository and in the configure file add paths to the INCLUDE_FILES.
