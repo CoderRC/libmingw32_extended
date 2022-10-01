@@ -12,6 +12,10 @@ SOURCES='
 \$(srcdir)/source/madvise.c
 \$(srcdir)/source/shm_open.c
 \$(srcdir)/source/shm_unlink.c
+\$(srcdir)/source/readv.c
+\$(srcdir)/source/writev.c
+\$(srcdir)/source/process_vm_readv.c
+\$(srcdir)/source/process_vm_writev.c
 '
 INCLUDE_DIRECTORIES='
 include
@@ -19,6 +23,7 @@ include/sys
 '
 INCLUDE_FILES='
 include/sys/mman.h
+include/sys/uio.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
