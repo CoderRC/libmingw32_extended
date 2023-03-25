@@ -16,6 +16,11 @@ SOURCES='
 \$(srcdir)/source/writev.c
 \$(srcdir)/source/process_vm_readv.c
 \$(srcdir)/source/process_vm_writev.c
+\$(srcdir)/source/dlopen.c
+\$(srcdir)/source/dlclose.c
+\$(srcdir)/source/dlsym.c
+\$(srcdir)/source/dlerror.c
+\$(srcdir)/source/dladdr.c
 '
 INCLUDE_DIRECTORIES='
 include
@@ -24,6 +29,7 @@ include/sys
 INCLUDE_FILES='
 include/sys/mman.h
 include/sys/uio.h
+include/dlfcn.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
