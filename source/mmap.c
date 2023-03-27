@@ -79,6 +79,22 @@ mmap (void *__addr, size_t __len, int __prot, int __flags, int __fd,
       buf = MapViewOfFileEx (hMapFile,
 			     FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE,
 			     (off >> 31) >> 1, off, size, __addr);
+      if (buf == NULL)
+	{
+	  if (__flags & MAP_FIXED)
+	    {
+	      munmap (__addr, size);
+	      buf = MapViewOfFileEx (hMapFile,
+				     FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE,
+				     (off >> 31) >> 1, off, size, __addr);
+	    }
+	  else
+	    {
+	      buf = MapViewOfFile (hMapFile,
+				   FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE,
+				   (off >> 31) >> 1, off, size);
+	    }
+	}
       CloseHandle (hMapFile);
       CloseHandle (hFile);
       if (buf == NULL)
