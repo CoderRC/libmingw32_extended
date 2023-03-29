@@ -39,3 +39,6 @@ To properly add new sources to the repository, the sources must be added to the 
 To properly add new include directories to the repository, the include directories must be added to the include directory in the repository and in the configure file add include paths to the INCLUDE_DIRECTORIES.
 
 To properly add new headers to the repository, the headers must be added to the include directory in the repository and in the configure file add paths to the INCLUDE_FILES.
+
+## Functions Completed and Can Be Used In Your Projects:
+pipe, wait, mmap, munmap, msync, mlock, munlock, posix_madvise, madvise, shm_open, shm_unlink, readv, writev, process_vm_readv, process_vm_writev, dlopen, dlclose, dlsym, dlerror, dladdr
