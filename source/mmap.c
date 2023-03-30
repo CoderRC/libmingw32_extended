@@ -2,6 +2,9 @@
 #include <windows.h>
 #include <sys/types.h>
 #include <errno.h>
+#ifndef _FILE_OFFSET_BITS
+#define _FILE_OFFSET_BITS 64
+#endif
 #include <sys/stat.h>
 #include <stdio.h>
 
