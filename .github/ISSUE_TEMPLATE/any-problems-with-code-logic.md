@@ -1,11 +1,14 @@
 ---
 name: Any problems with code logic
-about: This issue template's purpose here is to lead to a solution to any problems
-  with code logic
-title: "[Problems with code logic]"
+about: This pull request template's purpose here is to solve any problems with code
+  logic
+title: Solved [Problems with code logic]
 labels: enhancement
 assignees: CoderRC
 
 ---
 
-[Put where are the problems with code logic]
+Changed files:
+[Put the location of the files]
+Problems solved:
+[Put all the problems that are solved separated by new lines]
