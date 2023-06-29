@@ -24,7 +24,7 @@ shm_open (const char *__name, int __oflag, mode_t __mode)
   foldername[strlen (systemdrive) + strlen (tempshm)] = 0;
 
   _get_errno (&error_value);
-  mkdir (foldername);
+  CreateDirectory (foldername, NULL);
   _set_errno (error_value);
 
   filename =
