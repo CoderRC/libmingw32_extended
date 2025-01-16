@@ -2,6 +2,11 @@
 #include <windows.h>
 
 int shutdown(int socket, int how) {
-    SOCKET s = (SOCKET)socket;
-    return _shutdown(s, how);
+    void *Ws2_32 = dlopen("ws2_32.dll", RTLD_LAZY);
+    int (*_shutdown) (SOCKET s, int how) = dlsym(Ws2_32, "shutdown");
+    SOCKET s = (SOCKET)_get_osfhandle(socket);
+    int result = _shutdown(s, how);
+    CloseHandle(s);
+    dlclose(Ws2_32);
+    return result;
 }
