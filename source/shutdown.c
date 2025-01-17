@@ -6,7 +6,6 @@ int shutdown(int socket, int how) {
     int (*_shutdown) (SOCKET s, int how) = dlsym(Ws2_32, "shutdown");
     SOCKET s = (SOCKET)_get_osfhandle(socket);
     int result = _shutdown(s, how);
-    CloseHandle(s);
     dlclose(Ws2_32);
     return result;
 }

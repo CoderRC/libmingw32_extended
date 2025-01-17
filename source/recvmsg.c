@@ -6,7 +6,6 @@ ssize_t recvmsg(int socket, struct msghdr *message, int flags) {
     int (*_recvmsg) (SOCKET s, struct msghdr* msg, int flags) = dlsym(Ws2_32, "recvmsg");
     SOCKET s = (SOCKET)_get_osfhandle(socket);
     int result = _recvmsg(s, message, flags);
-    CloseHandle(s);
     dlclose(Ws2_32);
     return result;
 }

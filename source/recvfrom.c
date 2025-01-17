@@ -8,7 +8,6 @@ ssize_t recvfrom(int socket, void *buffer, size_t length, int flags,
                       struct sockaddr* from, int* fromlen) = dlsym(Ws2_32, "recvfrom");
     SOCKET s = (SOCKET)_get_osfhandle(socket);
     int result = _recvfrom(s, buffer, length, flags, address, address_len);
-    CloseHandle(s);
     dlclose(Ws2_32);
     return result;
 }
