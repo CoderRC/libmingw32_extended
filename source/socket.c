@@ -1,7 +1,22 @@
 #include <sys/socket.h>
-#include <windows.h>
 #include <fcntl.h>
 #include <dlfcn.h>
+
+typedef unsigned short WORD;
+typedef void* HANDLE;
+typedef HANDLE SOCKET;
+#define INVALID_SOCKET  (SOCKET)(-1)
+#define WSANOTINITIALISED 10093
+
+typedef struct _WSADATA {
+    WORD wVersion;
+    WORD wHighVersion;
+    char szDescription[256];
+    char szSystemStatus[128];
+    unsigned short iMaxSockets;
+    unsigned short iMaxUdpDg;
+    char *lpVendorInfo;
+} WSADATA;
 
 int socket(int domain, int type, int protocol) {
     void *Ws2_32 = dlopen("ws2_32.dll", RTLD_NOW);
@@ -39,6 +54,6 @@ int socket(int domain, int type, int protocol) {
         dlclose(Ws2_32);
         return -1;
     }
-    dlclose(Ws2_32);
+    //dlclose(Ws2_32);
     return fd;
 }
