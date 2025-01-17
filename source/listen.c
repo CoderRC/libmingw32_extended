@@ -6,7 +6,7 @@ int listen(int socket, int backlog) {
     int (*_listen) (SOCKET s, int backlog) = dlsym(Ws2_32, "listen");
     SOCKET s = (SOCKET)_get_osfhandle(socket);
     int result = _listen(s, backlog);
-    CloseHandle(s);
+    
     dlclose(Ws2_32);
     return result;
 }
