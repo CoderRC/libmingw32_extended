@@ -1,11 +1,9 @@
 #include <sys/socket.h>
-//#include <windows.h>
 #include <fcntl.h>
 #include <dlfcn.h>
 
 typedef void* HANDLE;
 typedef HANDLE SOCKET;
-char CloseHandle(HANDLE hObject);
 
 int setsockopt(int socket, int level, int option_name, const void *option_value, socklen_t option_len) {
     void *Ws2_32 = dlopen("ws2_32.dll", RTLD_LAZY);

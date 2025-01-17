@@ -1,5 +1,9 @@
 #include <sys/socket.h>
-#include <windows.h>
+#include <fcntl.h>
+#include <dlfcn.h>
+
+typedef void* HANDLE;
+typedef HANDLE SOCKET;
 
 ssize_t recvfrom(int socket, void *buffer, size_t length, int flags,
                  struct sockaddr *address, socklen_t *address_len) {

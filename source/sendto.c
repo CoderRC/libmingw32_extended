@@ -1,5 +1,9 @@
 #include <sys/socket.h>
-#include <windows.h>
+#include <fcntl.h>
+#include <dlfcn.h>
+
+typedef void* HANDLE;
+typedef HANDLE SOCKET;
 
 ssize_t sendto(int socket, const void *message, size_t length, int flags,
                const struct sockaddr *dest_addr, socklen_t dest_len) {

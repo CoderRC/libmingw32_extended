@@ -1,5 +1,9 @@
 #include <sys/socket.h>
-#include <windows.h>
+#include <fcntl.h>
+#include <dlfcn.h>
+
+typedef void* HANDLE;
+typedef HANDLE SOCKET;
 
 ssize_t sendmsg(int socket, const struct msghdr *message, int flags) {
     void *Ws2_32 = dlopen("ws2_32.dll", RTLD_LAZY);

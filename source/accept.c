@@ -1,11 +1,9 @@
 #include <sys/socket.h>
-//#include <windows.h>
 #include <fcntl.h>
 #include <dlfcn.h>
 
 typedef void* HANDLE;
 typedef HANDLE SOCKET;
-char CloseHandle(HANDLE hObject);
 
 int accept(int socket, struct sockaddr *address, socklen_t *address_len) {
     void *Ws2_32 = dlopen("ws2_32.dll", RTLD_LAZY);
