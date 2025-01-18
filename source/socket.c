@@ -2,15 +2,6 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <dlfcn.h>
-
-/**
- * @authors 
- * @CoderRC - johndoe@example.com
- * @ilkerlovesprogramming - contact@theilker.com
- *
- * @date January 18, 2025
- * @description This file contains the implementation of a simple linked list in C.
- */
 #include <stdio.h>
 
 typedef unsigned short WORD;
