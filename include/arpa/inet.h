@@ -9,17 +9,31 @@
 extern "C" {
 #endif
 
-/* Convert values between host and network byte order */
-uint32_t htonl(uint32_t hostlong);
-uint16_t htons(uint16_t hostshort);
-uint32_t ntohl(uint32_t netlong);
-uint16_t ntohs(uint16_t netshort);
+/* Types required by POSIX */
+typedef uint16_t in_port_t;
+typedef uint32_t in_addr_t;
 
-/* Convert IPv4 and IPv6 addresses from text to binary form */
-int inet_aton(const char *cp, struct in_addr *inp);
-char *inet_ntoa(struct in_addr in);
-const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
-int inet_pton(int af, const char *src, void *dst);
+/* Address-to-string buffer sizes */
+#define INET_ADDRSTRLEN 16
+#ifdef _IPV6_
+#define INET6_ADDRSTRLEN 46
+#endif
+
+/* Convert values between host and network byte order */
+uint32_t htonl(uint32_t);
+uint16_t htons(uint16_t);
+uint32_t ntohl(uint32_t);
+uint16_t ntohs(uint16_t);
+
+/* Obsolescent functions */
+#if !defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) || defined(_XOPEN_SOURCE)
+in_addr_t inet_addr(const char *);
+char *inet_ntoa(struct in_addr);
+#endif
+
+/* Current standard functions */
+const char *inet_ntop(int, const void *restrict, char *restrict, socklen_t);
+int inet_pton(int, const char *restrict, void *restrict);
 
 #ifdef __cplusplus
 }
