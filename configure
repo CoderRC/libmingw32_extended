@@ -3,6 +3,8 @@ configure_library ()
 SOURCES='
 \$(srcdir)/source/pipe.c
 \$(srcdir)/source/wait.c
+\$(srcdir)/source/waitid.c
+\$(srcdir)/source/waitpid.c
 \$(srcdir)/source/mmap.c
 \$(srcdir)/source/munmap.c
 \$(srcdir)/source/msync.c
@@ -67,6 +69,7 @@ include/sys
 INCLUDE_FILES='
 include/sys/mman.h
 include/sys/uio.h
+include/sys/wait.h
 include/dlfcn.h
 include/spawn.h
 '

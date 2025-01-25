@@ -1,3 +1,4 @@
+#include <sys/wait.h>
 #include <windows.h>
 #include <sys/types.h>
 #include <tlhelp32.h>
