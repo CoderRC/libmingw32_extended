@@ -91,7 +91,7 @@ all: compile_objects compile_library compile_include
 compile_objects: obj $(OBJECTS)
 
 $(OBJECTS): %.$(OBJEXT): source/%.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $< -o obj/$@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $< -o $(wildcard $@)$(filter-out obj/$(wildcard $@), obj/$@)
 
 obj:
 	$(mkdir_p) obj
