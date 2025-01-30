@@ -17,9 +17,9 @@ dladdr (const void *addr, Dl_info * info)
   DWORD dwErrCode = GetLastError ();
   pid_t mepid = getpid ();
   HANDLE hProcess = OpenProcess (PROCESS_QUERY_INFORMATION, FALSE, mepid);
-  DWORD nSize = 1;
-  LPSTR lpFilename = malloc (nSize);
   const char *root = "\\\\?\\GLOBALROOT";
+  LPSTR lpFilename;
+  DWORD nSize = 1;
   HANDLE hFile;
   MEMORY_BASIC_INFORMATION lpBuffer;
   LPSTR lpszFilePath;
@@ -33,12 +33,16 @@ dladdr (const void *addr, Dl_info * info)
   char *dli_sname;
   void *dli_saddr;
   SetLastError (ERROR_SUCCESS);
+  nSize += strlen (root) / sizeof (*lpFilename);
+  lpFilename = malloc (nSize);
   lpFilename += strlen (root) / sizeof (*lpFilename);
+  nSize -= strlen (root) / sizeof (*lpFilename);
   GetMappedFileName (hProcess, (LPVOID) addr, lpFilename, nSize);
   while (GetLastError () == ERROR_INSUFFICIENT_BUFFER)
     {
       nSize += 4096;
       lpFilename -= strlen (root) / sizeof (*lpFilename);
+      nSize += strlen (root) / sizeof (*lpFilename);
       free (lpFilename);
       lpFilename = malloc (nSize);
       if (lpFilename == 0)
@@ -46,8 +50,9 @@ dladdr (const void *addr, Dl_info * info)
 	  return 0;
 	}
       lpFilename += strlen (root) / sizeof (*lpFilename);
+      nSize -= strlen (root) / sizeof (*lpFilename);
       GetMappedFileName (hProcess, (LPVOID) addr, lpFilename,
-			 nSize - strlen (root));
+			 nSize);
     }
   if (GetLastError () != ERROR_SUCCESS)
     {
