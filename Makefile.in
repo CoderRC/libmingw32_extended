@@ -77,7 +77,7 @@ ARFLAGS=r
 COPY=@COPY@
 OBJEXT=@OBJEXT@
 SOURCES =@SOURCES@
-OBJECTS =$(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES))))
+OBJECTS =$(wildcard $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES))))) $(filter-out $(addprefix obj/, $(wildcard $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES)))))), $(addprefix obj/, $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES))))))
 INCLUDE_DIRECTORIES =@INCLUDE_DIRECTORIES@
 INCLUDE_FILES =@INCLUDE_FILES@
 mkdir_p =@mkdir_p@
@@ -90,15 +90,18 @@ all: compile_objects compile_library compile_include
 
 compile_objects: obj $(OBJECTS)
 
-$(OBJECTS): %.$(OBJEXT): source/%.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $< -o obj/$@
+$(wildcard $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES))))): %.$(OBJEXT): source/%.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(filter-out $(addprefix obj/, $(wildcard $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES)))))), $(addprefix obj/, $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES)))))): obj/%.$(OBJEXT): source/%.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 obj:
 	$(mkdir_p) obj
 
 compile_library: lib lib/libmingw32_extended.a
 
-lib/libmingw32_extended.a: $(addprefix obj/, $(OBJECTS))
+lib/libmingw32_extended.a: $(OBJECTS)
 	$(AR) $(ARFLAGS) lib/libmingw32_extended.a $?
 
 lib:
