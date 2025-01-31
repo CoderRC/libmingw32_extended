@@ -75,6 +75,7 @@ include
 include/sys
 '
 INCLUDE_FILES='
+include/sys/mman.h
 include/arpa/inet.h
 include/sys/uio.h
 include/sys/wait.h
