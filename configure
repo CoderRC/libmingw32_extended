@@ -73,11 +73,15 @@ SOURCES='
 INCLUDE_DIRECTORIES='
 include
 include/sys
+include/netinet
+include/arpa
 '
 INCLUDE_FILES='
 include/sys/mman.h
+include/netinet/in.h
 include/arpa/inet.h
 include/sys/uio.h
+include/sys/socket.h
 include/sys/wait.h
 include/dlfcn.h
 include/spawn.h
