@@ -1,6 +1,8 @@
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <dlfcn.h>
+#include <stdio.h>
 
 typedef unsigned short WORD;
 typedef void* HANDLE;
