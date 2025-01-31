@@ -50,6 +50,14 @@ SOURCES='
 \$(srcdir)/source/getpeername.c
 \$(srcdir)/source/getsockname.c
 \$(srcdir)/source/getsockopt.c
+\$(srcdir)/source/inet_addr.c
+\$(srcdir)/source/inet_ntoa.c
+\$(srcdir)/source/inet_ntop.c
+\$(srcdir)/source/inet_pton.c
+\$(srcdir)/source/htonl.c
+\$(srcdir)/source/htons.c
+\$(srcdir)/source/ntohl.c
+\$(srcdir)/source/ntohs.c
 \$(srcdir)/source/listen.c
 \$(srcdir)/source/recv.c
 \$(srcdir)/source/recvfrom.c
@@ -67,7 +75,7 @@ include
 include/sys
 '
 INCLUDE_FILES='
-include/sys/mman.h
+include/arpa/inet.h
 include/sys/uio.h
 include/sys/wait.h
 include/dlfcn.h
