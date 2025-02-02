@@ -47,6 +47,7 @@ SOURCES='
 \$(srcdir)/source/accept.c
 \$(srcdir)/source/bind.c
 \$(srcdir)/source/connect.c
+\$(srcdir)/source/getaddrinfo.c
 \$(srcdir)/source/getpeername.c
 \$(srcdir)/source/getsockname.c
 \$(srcdir)/source/getsockopt.c
@@ -85,6 +86,7 @@ include/sys/socket.h
 include/sys/wait.h
 include/dlfcn.h
 include/spawn.h
+include/netdb.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
