@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+
 #define EAI_AGAIN      -3  /* Temporary failure in name resolution */
 #define EAI_BADFLAGS   -1  /* Invalid value for ai_flags */
 #define EAI_FAIL       -4  /* Non-recoverable failure in name resolution */
@@ -19,6 +20,18 @@ extern "C" {
 #define EAI_SOCKTYPE   -7  /* ai_socktype not supported */
 #define EAI_SYSTEM     -11 /* System error returned in errno */
 #define EAI_OVERFLOW   -12 /* Argument buffer overflow */
+
+
+struct addrinfo {
+    int              ai_flags;      /* Input flags */
+    int              ai_family;     /* Protocol family for socket */
+    int              ai_socktype;   /* Socket type */
+    int              ai_protocol;   /* Protocol for socket */
+    socklen_t        ai_addrlen;    /* Length of socket address */
+    struct sockaddr *ai_addr;       /* Socket address for socket */
+    char            *ai_canonname;  /* Canonical name for service location */
+    struct addrinfo *ai_next;       /* Pointer to next in list */
+};
 
 #define AI_PASSIVE     0x0001 /* Socket address is intended for bind() */
 #define AI_CANONNAME   0x0002 /* Request canonical name */
@@ -96,16 +109,6 @@ struct servent {
     char  *s_proto;           /* Protocol to use */
 };
 
-struct addrinfo {
-    int              ai_flags;      /* Input flags */
-    int              ai_family;     /* Protocol family for socket */
-    int              ai_socktype;   /* Socket type */
-    int              ai_protocol;   /* Protocol for socket */
-    socklen_t        ai_addrlen;    /* Length of socket address */
-    struct sockaddr *ai_addr;       /* Socket address for socket */
-    char            *ai_canonname;  /* Canonical name for service location */
-    struct addrinfo *ai_next;       /* Pointer to next in list */
-};
 
 #ifdef __cplusplus
 }

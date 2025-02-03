@@ -31,7 +31,7 @@ int getaddrinfo(const char *node, const char *service,
         return EAI_MEMORY;
     }
     
-    // addr family, socket type and protocol
+    // addr family, socket type, and protocol
     ai->ai_family = (hints && hints->ai_family) ? hints->ai_family : AF_INET;
     ai->ai_socktype = (hints && hints->ai_socktype) ? hints->ai_socktype : SOCK_STREAM;
     ai->ai_protocol = (hints && hints->ai_protocol) ? hints->ai_protocol : 0;
@@ -50,7 +50,7 @@ int getaddrinfo(const char *node, const char *service,
     if (service) {
         char *endptr;
         port = (unsigned short)strtol(service, &endptr, 10);
-        if (*endptr != '\0') {// Service is not a number, return error as we don't support service names
+        if (*endptr != '\0') { // Service is not a number, return error as we don't support service names
             free(ai->ai_addr);
             free(ai);
             return EAI_SERVICE;
@@ -75,7 +75,8 @@ int getaddrinfo(const char *node, const char *service,
                 return EAI_NONAME;
             }
         }
-    } else {use INADDR_ANY if AI_PASSIVE is set
+    } else {
+        // Use INADDR_ANY if AI_PASSIVE is set
         if (hints && (hints->ai_flags & AI_PASSIVE)) {
             sa->sin_addr.s_addr = htonl(INADDR_ANY);
         } else {
@@ -89,43 +90,4 @@ int getaddrinfo(const char *node, const char *service,
     
     *res = ai;
     return 0;
-}
-
-void freeaddrinfo(struct addrinfo *res) {
-    struct addrinfo *next;
-    
-    while (res) {
-        next = res->ai_next;
-        free(res->ai_addr);
-        free(res->ai_canonname);
-        free(res);
-        res = next;
-    }
-}
-
-const char *gai_strerror(int errcode) {
-    switch (errcode) {
-        case EAI_AGAIN:
-            return "Temporary failure in name resolution";
-        case EAI_BADFLAGS:
-            return "Invalid value for ai_flags";
-        case EAI_FAIL:
-            return "Non-recoverable failure in name resolution";
-        case EAI_FAMILY:
-            return "ai_family not supported";
-        case EAI_MEMORY:
-            return "Memory allocation failure";
-        case EAI_NONAME:
-            return "Name or service not known";
-        case EAI_SERVICE:
-            return "Service name not supported for ai_socktype";
-        case EAI_SOCKTYPE:
-            return "ai_socktype not supported";
-        case EAI_SYSTEM:
-            return "System error returned in errno";
-        case EAI_OVERFLOW:
-            return "Argument buffer overflow";
-        default:
-            return "Unknown error";
-    }
 }

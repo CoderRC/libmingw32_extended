@@ -48,6 +48,8 @@ SOURCES='
 \$(srcdir)/source/bind.c
 \$(srcdir)/source/connect.c
 \$(srcdir)/source/getaddrinfo.c
+\$(srcdir)/source/freeaddrinfo.c
+\$(srcdir)/source/gai_strerror.c
 \$(srcdir)/source/getpeername.c
 \$(srcdir)/source/getsockname.c
 \$(srcdir)/source/getsockopt.c
