@@ -51,8 +51,7 @@ dladdr (const void *addr, Dl_info * info)
 	}
       lpFilename += strlen (root) / sizeof (*lpFilename);
       nSize -= strlen (root) / sizeof (*lpFilename);
-      GetMappedFileName (hProcess, (LPVOID) addr, lpFilename,
-			 nSize);
+      GetMappedFileName (hProcess, (LPVOID) addr, lpFilename, nSize);
     }
   if (GetLastError () != ERROR_SUCCESS)
     {

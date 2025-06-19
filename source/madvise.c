@@ -153,9 +153,10 @@ madvise_PrefetchVirtualMemory (madvise_D_PrefetchVirtualMemory *
 		   memoryScanStrideMultipliers[i]; j++)
 		{
 		  lpos =
-		    (size_t) madvise_d_PrefetchVirtualMemory->
-		    VirtualAddresses[j *
-				     memoryScanStrideMultipliers[i]].
+		    (size_t)
+		    madvise_d_PrefetchVirtualMemory->VirtualAddresses[j *
+								      memoryScanStrideMultipliers
+								      [i]].
 		    VirtualAddress;
 		  readMemSize = 0;
 		  for (k = 0; k != memoryScanStrideMultipliers[i]; k++)
@@ -169,12 +170,16 @@ madvise_PrefetchVirtualMemory (madvise_D_PrefetchVirtualMemory *
 			  readMemSize = readMemMaxSize - readMemSize;
 			}
 		      readMemSize +=
-			(size_t) madvise_d_PrefetchVirtualMemory->
-			VirtualAddresses[j * memoryScanStrideMultipliers[i] +
-					 k].NumberOfBytes;
+			(size_t)
+			madvise_d_PrefetchVirtualMemory->VirtualAddresses[j *
+									  memoryScanStrideMultipliers
+									  [i]
+									  +
+									  k].NumberOfBytes;
 		      if (k + 1 != memoryScanStrideMultipliers[i]
 			  && (lpos + readMemSize !=
-			      ((size_t) madvise_d_PrefetchVirtualMemory->
+			      ((size_t)
+			       madvise_d_PrefetchVirtualMemory->
 			       VirtualAddresses[j *
 						memoryScanStrideMultipliers[i]
 						+ k + 1].VirtualAddress)
@@ -185,10 +190,10 @@ madvise_PrefetchVirtualMemory (madvise_D_PrefetchVirtualMemory *
 			  fsetpos (fp, &fpos);
 			  fread (readMemLoc, 1, readMemSize, fp);
 			  lpos =
-			    (size_t) madvise_d_PrefetchVirtualMemory->
-			    VirtualAddresses[j *
-					     memoryScanStrideMultipliers[i] +
-					     k + 1].VirtualAddress;
+			    (size_t)
+			    madvise_d_PrefetchVirtualMemory->VirtualAddresses
+			    [j * memoryScanStrideMultipliers[i] + k +
+			     1].VirtualAddress;
 			  readMemSize = 0;
 			  nSize = nSize2;
 			  lpFilename = lpFilename2;
@@ -217,8 +222,9 @@ madvise_PrefetchVirtualMemory (madvise_D_PrefetchVirtualMemory *
 				strlen (root) / sizeof (*lpFilename);
 			      lpFilenameSize =
 				GetMappedFileName (GetCurrentProcess (),
-						   (LPVOID) lpBuffer.
-						   BaseAddress, lpFilename,
+						   (LPVOID)
+						   lpBuffer.BaseAddress,
+						   lpFilename,
 						   nSize - strlen (root) -
 						   1) + strlen (root) + 1;
 			    }
@@ -259,9 +265,10 @@ madvise_PrefetchVirtualMemory (madvise_D_PrefetchVirtualMemory *
 		  memoryScanStrideMultipliers[i])
 		{
 		  lpos =
-		    (size_t) madvise_d_PrefetchVirtualMemory->
-		    VirtualAddresses[j *
-				     memoryScanStrideMultipliers[i]].
+		    (size_t)
+		    madvise_d_PrefetchVirtualMemory->VirtualAddresses[j *
+								      memoryScanStrideMultipliers
+								      [i]].
 		    VirtualAddress;
 		  readMemSize = 0;
 		  k_size =
@@ -278,12 +285,16 @@ madvise_PrefetchVirtualMemory (madvise_D_PrefetchVirtualMemory *
 			  readMemSize = readMemMaxSize - readMemSize;
 			}
 		      readMemSize +=
-			(size_t) madvise_d_PrefetchVirtualMemory->
-			VirtualAddresses[j * memoryScanStrideMultipliers[i] +
-					 k].NumberOfBytes;
+			(size_t)
+			madvise_d_PrefetchVirtualMemory->VirtualAddresses[j *
+									  memoryScanStrideMultipliers
+									  [i]
+									  +
+									  k].NumberOfBytes;
 		      if (k + 1 != k_size
 			  && (lpos + readMemSize !=
-			      ((size_t) madvise_d_PrefetchVirtualMemory->
+			      ((size_t)
+			       madvise_d_PrefetchVirtualMemory->
 			       VirtualAddresses[j *
 						memoryScanStrideMultipliers[i]
 						+ k + 1].VirtualAddress)
@@ -294,10 +305,10 @@ madvise_PrefetchVirtualMemory (madvise_D_PrefetchVirtualMemory *
 			  fsetpos (fp, &fpos);
 			  fread (readMemLoc, 1, readMemSize, fp);
 			  lpos =
-			    (size_t) madvise_d_PrefetchVirtualMemory->
-			    VirtualAddresses[j *
-					     memoryScanStrideMultipliers[i] +
-					     k + 1].VirtualAddress;
+			    (size_t)
+			    madvise_d_PrefetchVirtualMemory->VirtualAddresses
+			    [j * memoryScanStrideMultipliers[i] + k +
+			     1].VirtualAddress;
 			  readMemSize = 0;
 			  nSize = nSize2;
 			  lpFilename = lpFilename2;
@@ -326,8 +337,9 @@ madvise_PrefetchVirtualMemory (madvise_D_PrefetchVirtualMemory *
 				strlen (root) / sizeof (*lpFilename);
 			      lpFilenameSize =
 				GetMappedFileName (GetCurrentProcess (),
-						   (LPVOID) lpBuffer.
-						   BaseAddress, lpFilename,
+						   (LPVOID)
+						   lpBuffer.BaseAddress,
+						   lpFilename,
 						   nSize - strlen (root) -
 						   1) + strlen (root) + 1;
 			    }
