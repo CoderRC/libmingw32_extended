@@ -35,9 +35,9 @@ shm_open (const char *__name, int __oflag, mode_t __mode)
 
   filename[strlen (systemdrive) + strlen (tempshm) + strlen (__name)] = 0;
 
-  char *proccessed_path =
-    _fullpath (NULL, filename,
-	       strlen (systemdrive) + strlen (tempshm) + strlen (__name));
+  char *proccessed_path = _fullpath (NULL, filename,
+				     strlen (systemdrive) + strlen (tempshm) +
+				     strlen (__name));
   numerator = 0;
   denominator = strlen (foldername);
   if (denominator <= strlen (proccessed_path))

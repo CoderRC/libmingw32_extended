@@ -35,10 +35,10 @@ msync (void *__addr, size_t __len, int __flags)
 	      SetLastError (dwErrCode);
 	      lpFilename -= strlen (root) / sizeof (*lpFilename);
 	      memcpy (lpFilename, root, strlen (root));
-	      HANDLE hFile =
-		CreateFile (lpFilename, GENERIC_WRITE,
-			    FILE_SHARE_READ | FILE_SHARE_WRITE |
-			    FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
+	      HANDLE hFile = CreateFile (lpFilename, GENERIC_WRITE,
+					 FILE_SHARE_READ | FILE_SHARE_WRITE |
+					 FILE_SHARE_DELETE, NULL,
+					 OPEN_EXISTING, 0, NULL);
 	      FlushFileBuffers (hFile);
 	      free (lpFilename);
 	      CloseHandle (hFile);
