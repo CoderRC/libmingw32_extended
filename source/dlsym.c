@@ -2,27 +2,75 @@
 #include <windows.h>
 #include <synchapi.h>
 
+static
+__declspec (thread)
+     char dlerror_buffer[512] = { 0 };
+
 static SRWLOCK g_imports_lock = SRWLOCK_INIT;
+
+static void
+set_dlerror_from_last_error (void)
+{
+  DWORD err = GetLastError ();
+  if (err == 0)
+    {
+      dlerror_buffer[0] = '\0';
+      return;
+    }
+
+  DWORD length =
+    FormatMessageA (FORMAT_MESSAGE_FROM_SYSTEM |
+		    FORMAT_MESSAGE_IGNORE_INSERTS,
+		    NULL,
+		    err,
+		    MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+		    dlerror_buffer,
+		    sizeof (dlerror_buffer),
+		    NULL);
+
+  if (length == 0)
+    snprintf (dlerror_buffer, sizeof (dlerror_buffer),
+	      "Unknown error 0x%08lx", err);
+  else
+    while (length > 0
+	   && (dlerror_buffer[length - 1] == '\n'
+	       || dlerror_buffer[length - 1] == '\r'))
+      {
+	dlerror_buffer[--length] = '\0';
+      }
+  SetLastError (0);
+}
 
 static PIMAGE_NT_HEADERS
 ImageNtHeader (void *base)
 {
   if (!base)
-    return NULL;
+    {
+      SetLastError (ERROR_INVALID_PARAMETER);
+      set_dlerror_from_last_error ();
+      return NULL;
+    }
 
   PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER) base;
   if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE)
-    return NULL;
+    {
+      SetLastError (ERROR_BAD_FORMAT);
+      set_dlerror_from_last_error ();
+      return NULL;
+    }
 
   PIMAGE_NT_HEADERS ntHeaders =
     (PIMAGE_NT_HEADERS) ((BYTE *) base + dosHeader->e_lfanew);
   if (ntHeaders->Signature != IMAGE_NT_SIGNATURE)
-    return NULL;
+    {
+      SetLastError (ERROR_BAD_FORMAT);
+      set_dlerror_from_last_error ();
+      return NULL;
+    }
 
   return ntHeaders;
 }
 
-// TODO: make this use a thread-safe hash/map
 static BOOL
 HasFixedImports (HMODULE module)
 {
@@ -65,6 +113,7 @@ dlsym (void *__restrict __handle, const char *__restrict __name)
   if (!__handle || !__name)
     {
       SetLastError (ERROR_INVALID_PARAMETER);
+      set_dlerror_from_last_error ();
       return NULL;
     }
 
@@ -78,8 +127,10 @@ dlsym (void *__restrict __handle, const char *__restrict __name)
 
   IMAGE_DATA_DIRECTORY importDir =
     ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
+
+  // no imports to patch, just return symbol
   if (importDir.VirtualAddress == 0 || importDir.Size == 0)
-    return NULL;
+    return (LPVOID) GetProcAddress (module, __name);
 
   BYTE *baseAddr = (BYTE *) __handle;
   PIMAGE_IMPORT_DESCRIPTOR importDesc =
@@ -87,7 +138,10 @@ dlsym (void *__restrict __handle, const char *__restrict __name)
 
   MEMORY_BASIC_INFORMATION mbi;
   if (VirtualQuery (importDesc, &mbi, sizeof (mbi)) == 0)
-    return NULL;
+    {
+      set_dlerror_from_last_error ();
+      return NULL;
+    }
 
   if ((mbi.Protect & PAGE_WRITECOPY) && !HasFixedImports (module))
     {
@@ -150,5 +204,9 @@ dlsym (void *__restrict __handle, const char *__restrict __name)
 	}
     }
 
-  return (LPVOID) GetProcAddress (module, __name);
+  void *result = (LPVOID) GetProcAddress (module, __name);
+  if (!result)
+    set_dlerror_from_last_error ();
+
+  return result;
 }
