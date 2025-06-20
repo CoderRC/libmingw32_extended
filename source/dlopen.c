@@ -1,7 +1,9 @@
 #include <dlfcn.h>
 #include <windows.h>
 
-static char dlerror_buffer[512] = { 0 };
+static
+__declspec (thread)
+     char dlerror_buffer[512] = { 0 };
 
 static void
 set_dlerror_from_last_error (void)
@@ -12,23 +14,46 @@ set_dlerror_from_last_error (void)
       dlerror_buffer[0] = '\0';
       return;
     }
-  FormatMessageA (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		  NULL,
-		  err,
-		  MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-		  dlerror_buffer, sizeof (dlerror_buffer), NULL);
-  SetLastError (0);
+
+  DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+
+  DWORD length = FormatMessageA (flags,
+				 NULL,
+				 err,
+				 MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+				 dlerror_buffer,
+				 sizeof (dlerror_buffer),
+				 NULL);
+
+  if (length == 0)
+    {
+      // Failed to format the message, fallback to numeric error code string
+      snprintf (dlerror_buffer, sizeof (dlerror_buffer),
+		"Unknown error 0x%08lx", err);
+    }
+  else
+    {
+      // Trim trailing newline characters (CRLF)
+      while (length > 0
+	     && (dlerror_buffer[length - 1] == '\n'
+		 || dlerror_buffer[length - 1] == '\r'))
+	{
+	  dlerror_buffer[--length] = '\0';
+	}
+    }
 }
 
 void *
 dlopen (const char *__file, int __mode)
 {
-  DWORD dwFlags = 0;
   if (!__file)
     {
       SetLastError (ERROR_INVALID_PARAMETER);
+      set_dlerror_from_last_error ();
       return NULL;
     }
+
+  DWORD dwFlags = 0;
 
   if (__mode & RTLD_LAZY)
     {
@@ -39,10 +64,9 @@ dlopen (const char *__file, int __mode)
   if (!module)
     {
       set_dlerror_from_last_error ();
+      return NULL;
     }
-  else
-    {
-      dlerror_buffer[0] = '\0';
-    }
+
+  dlerror_buffer[0] = '\0';
   return (LPVOID) module;
 }
