@@ -2,7 +2,20 @@
 #include <windows.h>
 
 int
-dlclose (void *__handle)
+dlclose (LPVOID __handle)
 {
-  return !FreeLibrary (__handle);
+  if (!__handle)
+    {
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return -1;
+    }
+
+  BOOL success = FreeLibrary ((HMODULE) __handle);
+  if (!success)
+    {
+      SetLastError (GetLastError ());
+      return -1;
+    }
+
+  return 0;
 }
