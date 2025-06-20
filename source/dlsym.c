@@ -2,12 +2,24 @@
 #include <windows.h>
 #include <synchapi.h>
 
+/// @brief Thread-local buffer to hold error messages for dlerror().
 static
 __declspec (thread)
      char dlerror_buffer[512] = { 0 };
 
+/// @brief SRW lock to synchronize access to patched modules list.
 static SRWLOCK g_imports_lock = SRWLOCK_INIT;
 
+/// @brief Sets the thread-local dlerror buffer from the current Windows last error.
+///
+/// Retrieves the last error code via GetLastError() and formats the error message
+/// string into `dlerror_buffer`. If no error code is set (0), clears the buffer.
+///
+/// Trims trailing newline characters from the formatted message.
+///
+/// If `FormatMessageA` fails, stores a fallback string with the numeric error code.
+///
+/// @note This function resets the Windows last error to 0 after capturing it.
 static void
 set_dlerror_from_last_error (void)
 {
@@ -41,6 +53,12 @@ set_dlerror_from_last_error (void)
   SetLastError (0);
 }
 
+/// @brief Gets the NT Headers from the base address of a loaded module.
+///
+/// @param base Pointer to the base address of a loaded module.
+///
+/// @return Pointer to the IMAGE_NT_HEADERS if valid, otherwise NULL.
+/// @note On failure, sets the thread-local dlerror buffer with an appropriate error message.
 static PIMAGE_NT_HEADERS
 ImageNtHeader (void *base)
 {
@@ -71,6 +89,13 @@ ImageNtHeader (void *base)
   return ntHeaders;
 }
 
+/// @brief Tracks modules that have had their import address tables fixed.
+///
+/// Prevents repeated patching by maintaining a static list protected by SRW lock.
+///
+/// @param module Handle of the loaded module.
+///
+/// @return TRUE if imports have already been fixed for this module, FALSE otherwise.
 static BOOL
 HasFixedImports (HMODULE module)
 {
@@ -95,6 +120,10 @@ HasFixedImports (HMODULE module)
   return FALSE;
 }
 
+/// @brief Writes the actual function address into the import address table thunk.
+///
+/// @param thunk Pointer to the import thunk to patch.
+/// @param procAddress Address of the function to patch into the IAT.
 static inline void
 PatchIATEntry (PIMAGE_THUNK_DATA thunk, FARPROC procAddress)
 {
@@ -105,6 +134,7 @@ PatchIATEntry (PIMAGE_THUNK_DATA thunk, FARPROC procAddress)
 #endif
 }
 
+/// @brief Signature for DLL entry point function (DllMain).
 typedef BOOL (WINAPI * DllEntryProc) (HINSTANCE, DWORD, LPVOID);
 
 void *
@@ -128,7 +158,7 @@ dlsym (void *__restrict __handle, const char *__restrict __name)
   IMAGE_DATA_DIRECTORY importDir =
     ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 
-  // no imports to patch, just return symbol
+  // No imports to patch, just return symbol
   if (importDir.VirtualAddress == 0 || importDir.Size == 0)
     return (LPVOID) GetProcAddress (module, __name);
 
@@ -145,6 +175,7 @@ dlsym (void *__restrict __handle, const char *__restrict __name)
 
   if ((mbi.Protect & PAGE_WRITECOPY) && !HasFixedImports (module))
     {
+      // Patch IAT for all imported modules
       for (; importDesc->Name != 0; importDesc++)
 	{
 	  LPCSTR libName = (LPCSTR) (baseAddr + importDesc->Name);
@@ -190,6 +221,7 @@ dlsym (void *__restrict __handle, const char *__restrict __name)
 	    }
 	}
 
+      // Call DLL entry point with DLL_PROCESS_ATTACH
       FARPROC entryPoint =
 	(FARPROC) (baseAddr + ntHeaders->OptionalHeader.AddressOfEntryPoint);
       if (entryPoint)

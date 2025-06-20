@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 
+/// @brief Thread-local buffer to hold error messages for dlerror().
 static
 __declspec (thread)
      char dlerror_buffer[512] = { 0 };

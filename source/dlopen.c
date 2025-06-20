@@ -1,10 +1,21 @@
 #include <dlfcn.h>
 #include <windows.h>
 
+/// @brief Thread-local buffer to hold error messages for dlerror().
 static
 __declspec (thread)
      char dlerror_buffer[512] = { 0 };
 
+/// @brief Sets the thread-local dlerror buffer from the current Windows last error.
+///
+/// Retrieves the last error code via GetLastError() and formats the error message
+/// string into `dlerror_buffer`. If no error code is set (0), clears the buffer.
+///
+/// Trims trailing newline characters from the formatted message.
+///
+/// If `FormatMessageA` fails, stores a fallback string with the numeric error code.
+///
+/// @note This function resets the Windows last error to 0 after capturing it.
 static void
 set_dlerror_from_last_error (void)
 {

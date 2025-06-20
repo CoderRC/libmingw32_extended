@@ -7,8 +7,10 @@
 
 #pragma comment(lib, "dbghelp.lib")
 
+/// @brief Shared Reader-Writer lock to guard dbghelp usage.
 static SRWLOCK g_dbghelp_lock = SRWLOCK_INIT;
 
+/// @brief One-time initialization for dbghelp symbols per process
 static BOOL CALLBACK
 SymInitOnceCallback (PINIT_ONCE InitOnce, PVOID Parameter, PVOID * Context)
 {
@@ -16,6 +18,7 @@ SymInitOnceCallback (PINIT_ONCE InitOnce, PVOID Parameter, PVOID * Context)
   SymSetOptions (SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME | SYMOPT_NO_PROMPTS);
   return SymInitialize (process, NULL, TRUE);
 }
+
 
 int
 dladdr (const LPVOID addr, Dl_info * info)
