@@ -2,176 +2,86 @@
 #include <windows.h>
 #include <psapi.h>
 #include <unistd.h>
+#include <dbghelp.h>
 
-static PIMAGE_NT_HEADERS
-ImageNtHeader (PVOID Base)
+#pragma comment(lib, "dbghelp.lib")
+
+static BOOL CALLBACK
+SymInitOnceCallback (PINIT_ONCE InitOnce, PVOID Parameter, PVOID * Context)
 {
-  PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER) Base;
-  if (!dos || dos->e_magic != IMAGE_DOS_SIGNATURE)
-    return NULL;
-
-  PIMAGE_NT_HEADERS nt = (PIMAGE_NT_HEADERS) ((char *) Base + dos->e_lfanew);
-  if (nt->Signature != IMAGE_NT_SIGNATURE)
-    return NULL;
-
-  return nt;
+  HANDLE process = GetCurrentProcess ();
+  SymSetOptions (SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME | SYMOPT_NO_PROMPTS);
+  return SymInitialize (process, NULL, TRUE);
 }
 
 int
-dladdr (const void *addr, Dl_info * info)
+dladdr (const LPVOID addr, Dl_info * info)
 {
+  int ret = 0;
+  DWORD lastErr = GetLastError ();
+
   if (!addr || !info)
     {
-      SetLastError (ERROR_INVALID_PARAMETER);
-      return 0;
+      lastErr = ERROR_INVALID_PARAMETER;
+      goto out;
     }
 
-  DWORD oldErr = GetLastError ();
-  int resultCode = 0;
-  HANDLE hProcess = NULL;
-  LPSTR lpFilename = NULL;
-  LPSTR resolvedPath = NULL;
+  memset (info, 0, sizeof (*info));
+  HANDLE process = GetCurrentProcess ();
 
-  HANDLE hProcess = OpenProcess (PROCESS_QUERY_INFORMATION, FALSE, getpid ());
-  if (!hProcess)
+  static INIT_ONCE initOnce = INIT_ONCE_STATIC_INIT;
+
+  // SymInitialize failed or already initialized improperly
+  if (!InitOnceExecuteOnce (&initOnce, SymInitOnceCallback, NULL, NULL))
     {
-      SetLastError (ERROR_INVALID_HANDLE);
-      return 0;
+      goto out;
     }
 
-  LPCSTR root = "\\\\?\\GLOBALROOT";
-  size_t rootlen = strlen (root);
-  DWORD nSize = MAX_PATH;
-  lpFilename = (LPSTR) malloc (nSize + rootlen + 1);
-  if (!lpFilename)
+  DWORD64 displacement = 0;
+  BYTE symbolBuffer[sizeof (SYMBOL_INFO) + MAX_SYM_NAME * sizeof (TCHAR)] =
+    { 0 };
+  PSYMBOL_INFO symbol = (PSYMBOL_INFO) symbolBuffer;
+  symbol->SizeOfStruct = sizeof (SYMBOL_INFO);
+  symbol->MaxNameLen = MAX_SYM_NAME;
+
+  BOOL hasSymbol =
+    SymFromAddr (process, (DWORD64) (uintptr_t) addr, &displacement, symbol);
+
+  IMAGEHLP_MODULE64 moduleInfo = { 0 };
+  moduleInfo.SizeOfStruct = sizeof (moduleInfo);
+
+  if (!SymGetModuleInfo64 (process, (DWORD64) (uintptr_t) addr, &moduleInfo))
+    goto out;
+
+  info->dli_fname = _strdup (moduleInfo.ImageName);
+  info->dli_fbase = (LPVOID) (uintptr_t) moduleInfo.BaseOfImage;
+
+  if (hasSymbol)
     {
-      SetLastError (ERROR_NOT_ENOUGH_MEMORY);
-      goto cleanup;
-    }
-
-  LPSTR filenamePtr = lpFilename + rootlen;
-  DWORD result =
-    GetMappedFileNameA (hProcess, (LPVOID) addr, filenamePtr, nSize);
-  if (result == 0)
-    {
-      goto cleanup;
-    }
-
-  memcpy (lpFilename, root, rootlen);
-  lpFilename[rootlen + result] = '\0';
-
-  HANDLE hFile = CreateFileA (lpFilename,
-			      GENERIC_READ,
-			      FILE_SHARE_READ | FILE_SHARE_WRITE |
-			      FILE_SHARE_DELETE,
-			      NULL,
-			      OPEN_EXISTING,
-			      FILE_FLAG_BACKUP_SEMANTICS,
-			      NULL);
-
-  resolvedPath = lpFilename;
-  if (hFile != INVALID_HANDLE_VALUE)
-    {
-      DWORD finalSize =
-	GetFinalPathNameByHandleA (hFile, NULL, 0, VOLUME_NAME_DOS);
-      if (finalSize)
+      char demangled[MAX_SYM_NAME];
+      if (UnDecorateSymbolName
+	  (symbol->Name, demangled, MAX_SYM_NAME,
+	   UNDNAME_COMPLETE | UNDNAME_NO_LEADING_UNDERSCORES))
 	{
-	  LPSTR tmpPath = (LPSTR) malloc (finalSize + 1);
-	  if (tmpPath
-	      && GetFinalPathNameByHandleA (hFile, tmpPath, finalSize,
-					    VOLUME_NAME_DOS))
-	    {
-	      free (lpFilename);
-	      resolvedPath = tmpPath;
-	    }
-	  else
-	    {
-	      free (tmpPath);
-	    }
+
+	  info->dli_sname = _strdup (demangled);
 	}
-      CloseHandle (hFile);
-    }
-
-  MEMORY_BASIC_INFORMATION mbi;
-  if (!VirtualQuery (addr, &mbi, sizeof (mbi)))
-    {
-      mbi.AllocationBase = (LPVOID) addr;
-    }
-
-  PIMAGE_NT_HEADERS ntHeaders = ImageNtHeader (mbi.AllocationBase);
-  if (!ntHeaders)
-    {
-      goto cleanup;
-    }
-
-  DWORD exportDirRVA =
-    ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].
-    VirtualAddress;
-  if (!exportDirRVA)
-    {
-      goto cleanup;
-    }
-
-  PIMAGE_EXPORT_DIRECTORY exportDir =
-    (PIMAGE_EXPORT_DIRECTORY) ((size_t) mbi.AllocationBase + exportDirRVA);
-
-  DWORD *nameRVAs =
-    (DWORD *) ((size_t) mbi.AllocationBase + exportDir->AddressOfNames);
-  DWORD *funcRVAs =
-    (DWORD *) ((size_t) mbi.AllocationBase + exportDir->AddressOfFunctions);
-  WORD *ordinals =
-    (WORD *) ((size_t) mbi.AllocationBase + exportDir->AddressOfNameOrdinals);
-
-  LPSTR closestName = NULL;
-  LPVOID closestAddr = NULL;
-  size_t addrOffset = (size_t) addr - (size_t) mbi.AllocationBase;
-  DWORD bestDistance = (DWORD) - 1;
-
-  for (DWORD i = 0; i < exportDir->NumberOfNames; ++i)
-    {
-      WORD ordinal = ordinals[i];
-      DWORD funcRVA = funcRVAs[ordinal];
-      if (funcRVA <= addrOffset)
+      else
 	{
-	  DWORD distance = addrOffset - funcRVA;
-	  if (distance < bestDistance)
-	    {
-	      bestDistance = distance;
-	      closestName =
-		(LPSTR) ((size_t) mbi.AllocationBase + nameRVAs[i]);
-	      closestAddr = (LPVOID) ((size_t) mbi.AllocationBase + funcRVA);
-	    }
+	  info->dli_sname = _strdup (symbol->Name);
 	}
+
+      info->dli_saddr = (LPVOID) (uintptr_t) symbol->Address;
     }
-
-  info->dli_fname = resolvedPath;
-  info->dli_fbase = mbi.AllocationBase;
-  info->dli_sname = closestName;
-  info->dli_saddr = closestAddr;
-
-  resultCode = 1;
-
-cleanup:
-  SetLastError (oldErr);
-  if (hProcess)
+  else
     {
-      CloseHandle (hProcess);
+      info->dli_sname = NULL;
+      info->dli_saddr = NULL;
     }
 
-  if (resultCode == 0 && resolvedPath != lpFilename)
-    {
-      free (resolvedPath);
-    }
+  ret = 1;
 
-  if ((resultCode == 1 && resolvedPath != lpFilename) || resultCode == 0)
-    {
-      // User takes ownership of resolvedPath
-    }
-
-  else if (lpFilename)
-    {
-      free (lpFilename);
-    }
-
-  return resultCode;
+out:
+  SetLastError (lastErr);
+  return ret;
 }
