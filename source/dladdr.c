@@ -6,140 +6,172 @@
 static PIMAGE_NT_HEADERS
 ImageNtHeader (PVOID Base)
 {
-  PIMAGE_DOS_HEADER imageDosHeader = Base;
-  return (PIMAGE_NT_HEADERS) ((char *) (imageDosHeader) +
-			      imageDosHeader->e_lfanew);
+  PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER) Base;
+  if (!dos || dos->e_magic != IMAGE_DOS_SIGNATURE)
+    return NULL;
+
+  PIMAGE_NT_HEADERS nt = (PIMAGE_NT_HEADERS) ((char *) Base + dos->e_lfanew);
+  if (nt->Signature != IMAGE_NT_SIGNATURE)
+    return NULL;
+
+  return nt;
 }
 
 int
 dladdr (const void *addr, Dl_info * info)
 {
-  DWORD dwErrCode = GetLastError ();
-  pid_t mepid = getpid ();
-  HANDLE hProcess = OpenProcess (PROCESS_QUERY_INFORMATION, FALSE, mepid);
-  const char *root = "\\\\?\\GLOBALROOT";
-  LPSTR lpFilename;
-  DWORD nSize = 1;
-  HANDLE hFile;
-  MEMORY_BASIC_INFORMATION lpBuffer;
-  LPSTR lpszFilePath;
-  PIMAGE_NT_HEADERS imageNtHeaders;
-  PIMAGE_EXPORT_DIRECTORY imageExportDirectory;
-  DWORD i;
-  DWORD NumberOfNames;
-  DWORD *AddressOfNames;
-  DWORD *AddressOfFunctions;
-  DWORD AddressOfFunction;
-  char *dli_sname;
-  void *dli_saddr;
-  SetLastError (ERROR_SUCCESS);
-  nSize += strlen (root) / sizeof (*lpFilename);
-  lpFilename = malloc (nSize);
-  lpFilename += strlen (root) / sizeof (*lpFilename);
-  nSize -= strlen (root) / sizeof (*lpFilename);
-  GetMappedFileName (hProcess, (LPVOID) addr, lpFilename, nSize);
-  while (GetLastError () == ERROR_INSUFFICIENT_BUFFER)
+  if (!addr || !info)
     {
-      nSize += 4096;
-      lpFilename -= strlen (root) / sizeof (*lpFilename);
-      nSize += strlen (root) / sizeof (*lpFilename);
-      free (lpFilename);
-      lpFilename = malloc (nSize);
-      if (lpFilename == 0)
-	{
-	  return 0;
-	}
-      lpFilename += strlen (root) / sizeof (*lpFilename);
-      nSize -= strlen (root) / sizeof (*lpFilename);
-      GetMappedFileName (hProcess, (LPVOID) addr, lpFilename, nSize);
-    }
-  if (GetLastError () != ERROR_SUCCESS)
-    {
+      SetLastError (ERROR_INVALID_PARAMETER);
       return 0;
     }
-  lpFilename -= strlen (root) / sizeof (*lpFilename);
-  memcpy (lpFilename, root, strlen (root));
-  nSize = 1;
 
-  hFile = CreateFile (lpFilename, GENERIC_READ,
-		      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		      NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+  DWORD oldErr = GetLastError ();
+  int resultCode = 0;
+  HANDLE hProcess = NULL;
+  LPSTR lpFilename = NULL;
+  LPSTR resolvedPath = NULL;
+
+  HANDLE hProcess = OpenProcess (PROCESS_QUERY_INFORMATION, FALSE, getpid ());
+  if (!hProcess)
+    {
+      SetLastError (ERROR_INVALID_HANDLE);
+      return 0;
+    }
+
+  LPCSTR root = "\\\\?\\GLOBALROOT";
+  size_t rootlen = strlen (root);
+  DWORD nSize = MAX_PATH;
+  lpFilename = (LPSTR) malloc (nSize + rootlen + 1);
+  if (!lpFilename)
+    {
+      SetLastError (ERROR_NOT_ENOUGH_MEMORY);
+      goto cleanup;
+    }
+
+  LPSTR filenamePtr = lpFilename + rootlen;
+  DWORD result =
+    GetMappedFileNameA (hProcess, (LPVOID) addr, filenamePtr, nSize);
+  if (result == 0)
+    {
+      goto cleanup;
+    }
+
+  memcpy (lpFilename, root, rootlen);
+  lpFilename[rootlen + result] = '\0';
+
+  HANDLE hFile = CreateFileA (lpFilename,
+			      GENERIC_READ,
+			      FILE_SHARE_READ | FILE_SHARE_WRITE |
+			      FILE_SHARE_DELETE,
+			      NULL,
+			      OPEN_EXISTING,
+			      FILE_FLAG_BACKUP_SEMANTICS,
+			      NULL);
+
+  resolvedPath = lpFilename;
   if (hFile != INVALID_HANDLE_VALUE)
     {
-      nSize = GetFinalPathNameByHandle (hFile, 0, 0, VOLUME_NAME_DOS);
-
-      if (nSize != 0)
+      DWORD finalSize =
+	GetFinalPathNameByHandleA (hFile, NULL, 0, VOLUME_NAME_DOS);
+      if (finalSize)
 	{
-	  nSize++;
-	  lpszFilePath = (char *) malloc (nSize);
-	  if (!lpszFilePath || !GetFinalPathNameByHandle (hFile,
-							  lpszFilePath, nSize,
-							  VOLUME_NAME_DOS))
+	  LPSTR tmpPath = (LPSTR) malloc (finalSize + 1);
+	  if (tmpPath
+	      && GetFinalPathNameByHandleA (hFile, tmpPath, finalSize,
+					    VOLUME_NAME_DOS))
 	    {
-	      free (lpszFilePath);
-	      lpszFilePath = lpFilename;
+	      free (lpFilename);
+	      resolvedPath = tmpPath;
 	    }
 	  else
 	    {
-	      free (lpFilename);
+	      free (tmpPath);
 	    }
 	}
-      else
+      CloseHandle (hFile);
+    }
+
+  MEMORY_BASIC_INFORMATION mbi;
+  if (!VirtualQuery (addr, &mbi, sizeof (mbi)))
+    {
+      mbi.AllocationBase = (LPVOID) addr;
+    }
+
+  PIMAGE_NT_HEADERS ntHeaders = ImageNtHeader (mbi.AllocationBase);
+  if (!ntHeaders)
+    {
+      goto cleanup;
+    }
+
+  DWORD exportDirRVA =
+    ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].
+    VirtualAddress;
+  if (!exportDirRVA)
+    {
+      goto cleanup;
+    }
+
+  PIMAGE_EXPORT_DIRECTORY exportDir =
+    (PIMAGE_EXPORT_DIRECTORY) ((size_t) mbi.AllocationBase + exportDirRVA);
+
+  DWORD *nameRVAs =
+    (DWORD *) ((size_t) mbi.AllocationBase + exportDir->AddressOfNames);
+  DWORD *funcRVAs =
+    (DWORD *) ((size_t) mbi.AllocationBase + exportDir->AddressOfFunctions);
+  WORD *ordinals =
+    (WORD *) ((size_t) mbi.AllocationBase + exportDir->AddressOfNameOrdinals);
+
+  LPSTR closestName = NULL;
+  LPVOID closestAddr = NULL;
+  size_t addrOffset = (size_t) addr - (size_t) mbi.AllocationBase;
+  DWORD bestDistance = (DWORD) - 1;
+
+  for (DWORD i = 0; i < exportDir->NumberOfNames; ++i)
+    {
+      WORD ordinal = ordinals[i];
+      DWORD funcRVA = funcRVAs[ordinal];
+      if (funcRVA <= addrOffset)
 	{
-	  lpszFilePath = lpFilename;
+	  DWORD distance = addrOffset - funcRVA;
+	  if (distance < bestDistance)
+	    {
+	      bestDistance = distance;
+	      closestName =
+		(LPSTR) ((size_t) mbi.AllocationBase + nameRVAs[i]);
+	      closestAddr = (LPVOID) ((size_t) mbi.AllocationBase + funcRVA);
+	    }
 	}
     }
-  else
+
+  info->dli_fname = resolvedPath;
+  info->dli_fbase = mbi.AllocationBase;
+  info->dli_sname = closestName;
+  info->dli_saddr = closestAddr;
+
+  resultCode = 1;
+
+cleanup:
+  SetLastError (oldErr);
+  if (hProcess)
     {
-      lpszFilePath = lpFilename;
+      CloseHandle (hProcess);
     }
 
-  if (!VirtualQuery (addr, &lpBuffer, sizeof (lpBuffer)))
+  if (resultCode == 0 && resolvedPath != lpFilename)
     {
-      lpBuffer.AllocationBase = (void *) addr;
+      free (resolvedPath);
     }
 
-  imageNtHeaders = ImageNtHeader (lpBuffer.AllocationBase);
-  imageExportDirectory =
-    (PIMAGE_EXPORT_DIRECTORY) ((size_t) lpBuffer.AllocationBase +
-			       imageNtHeaders->OptionalHeader.DataDirectory
-			       [IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);
-  if (imageExportDirectory->NumberOfNames <
-      imageExportDirectory->NumberOfFunctions)
+  if ((resultCode == 1 && resolvedPath != lpFilename) || resultCode == 0)
     {
-      NumberOfNames = imageExportDirectory->NumberOfNames;
-    }
-  else
-    {
-      NumberOfNames = imageExportDirectory->NumberOfFunctions;
-    }
-  AddressOfNames =
-    (DWORD *) ((size_t) lpBuffer.AllocationBase +
-	       imageExportDirectory->AddressOfNames);
-  AddressOfFunctions =
-    (DWORD *) ((size_t) lpBuffer.AllocationBase +
-	       imageExportDirectory->AddressOfFunctions);
-  AddressOfFunction = (size_t) addr - (size_t) lpBuffer.AllocationBase;
-  dli_sname = 0;
-  dli_saddr = 0;
-
-  for (i = 0; i != NumberOfNames; i++)
-    {
-      if (AddressOfFunctions[i] <= AddressOfFunction)
-	{
-	  dli_sname =
-	    (char *) ((size_t) lpBuffer.AllocationBase + AddressOfNames[i]);
-	  dli_saddr =
-	    (void *) ((size_t) lpBuffer.AllocationBase +
-		      AddressOfFunctions[i]);
-	  i = NumberOfNames - 1;
-	}
+      // User takes ownership of resolvedPath
     }
 
-  info->dli_fname = lpszFilePath;
-  info->dli_fbase = lpBuffer.AllocationBase;
-  info->dli_sname = dli_sname;
-  info->dli_saddr = dli_saddr;
-  SetLastError (dwErrCode);
-  return 1;
+  else if (lpFilename)
+    {
+      free (lpFilename);
+    }
+
+  return resultCode;
 }
