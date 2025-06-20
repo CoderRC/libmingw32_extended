@@ -13,7 +13,6 @@ dlclose (LPVOID __handle)
   BOOL success = FreeLibrary ((HMODULE) __handle);
   if (!success)
     {
-      SetLastError (GetLastError ());
       return -1;
     }
 
