@@ -116,6 +116,7 @@ argvToCommandLine (char *const argv[])
 	  size++;
 	}
     }
+  size += *arg == 0;
   while (*arg)
     {
       eArg = argvToCommandLinePart (*arg);
