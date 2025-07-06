@@ -47,6 +47,8 @@ SOURCES='
 \$(srcdir)/source/accept.c
 \$(srcdir)/source/bind.c
 \$(srcdir)/source/connect.c
+\$(srcdir)/source/getaddrinfo.c
+\$(srcdir)/source/freeaddrinfo.c
 \$(srcdir)/source/getpeername.c
 \$(srcdir)/source/getsockname.c
 \$(srcdir)/source/getsockopt.c
@@ -69,6 +71,7 @@ SOURCES='
 \$(srcdir)/source/shutdown.c
 \$(srcdir)/source/socket.c
 \$(srcdir)/source/socketpair.c
+\$(srcdir)/source/gai_strerror.c
 '
 INCLUDE_DIRECTORIES='
 include
@@ -85,6 +88,7 @@ include/sys/socket.h
 include/sys/wait.h
 include/dlfcn.h
 include/spawn.h
+include/netdb.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
