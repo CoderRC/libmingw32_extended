@@ -1,145 +1,97 @@
+#include <dbghelp.h>
 #include <dlfcn.h>
-#include <windows.h>
 #include <psapi.h>
+#include <synchapi.h>
 #include <unistd.h>
+#include <windows.h>
 
-static PIMAGE_NT_HEADERS
-ImageNtHeader (PVOID Base)
+#pragma comment(lib, "dbghelp.lib")
+
+/// @brief Shared Reader-Writer lock to guard dbghelp usage.
+static SRWLOCK g_dbghelp_lock = SRWLOCK_INIT;
+
+/// @brief One-time initialization for dbghelp symbols per process
+static BOOL CALLBACK
+SymInitOnceCallback (PINIT_ONCE InitOnce, PVOID Parameter, PVOID * Context)
 {
-  PIMAGE_DOS_HEADER imageDosHeader = Base;
-  return (PIMAGE_NT_HEADERS) ((char *) (imageDosHeader) +
-			      imageDosHeader->e_lfanew);
+  HANDLE process = GetCurrentProcess ();
+  SymSetOptions (SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME | SYMOPT_NO_PROMPTS);
+  return SymInitialize (process, NULL, TRUE);
 }
 
+
 int
-dladdr (const void *addr, Dl_info * info)
+dladdr (const LPVOID addr, Dl_info * info)
 {
-  DWORD dwErrCode = GetLastError ();
-  pid_t mepid = getpid ();
-  HANDLE hProcess = OpenProcess (PROCESS_QUERY_INFORMATION, FALSE, mepid);
-  const char *root = "\\\\?\\GLOBALROOT";
-  LPSTR lpFilename;
-  DWORD nSize = 1;
-  HANDLE hFile;
-  MEMORY_BASIC_INFORMATION lpBuffer;
-  LPSTR lpszFilePath;
-  PIMAGE_NT_HEADERS imageNtHeaders;
-  PIMAGE_EXPORT_DIRECTORY imageExportDirectory;
-  DWORD i;
-  DWORD NumberOfNames;
-  DWORD *AddressOfNames;
-  DWORD *AddressOfFunctions;
-  DWORD AddressOfFunction;
-  char *dli_sname;
-  void *dli_saddr;
-  SetLastError (ERROR_SUCCESS);
-  nSize += strlen (root) / sizeof (*lpFilename);
-  lpFilename = malloc (nSize);
-  lpFilename += strlen (root) / sizeof (*lpFilename);
-  nSize -= strlen (root) / sizeof (*lpFilename);
-  GetMappedFileName (hProcess, (LPVOID) addr, lpFilename, nSize);
-  while (GetLastError () == ERROR_INSUFFICIENT_BUFFER)
+  if (!addr || !info)
     {
-      nSize += 4096;
-      lpFilename -= strlen (root) / sizeof (*lpFilename);
-      nSize += strlen (root) / sizeof (*lpFilename);
-      free (lpFilename);
-      lpFilename = malloc (nSize);
-      if (lpFilename == 0)
-	{
-	  return 0;
-	}
-      lpFilename += strlen (root) / sizeof (*lpFilename);
-      nSize -= strlen (root) / sizeof (*lpFilename);
-      GetMappedFileName (hProcess, (LPVOID) addr, lpFilename, nSize);
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return 0;
     }
-  if (GetLastError () != ERROR_SUCCESS)
+
+  memset (info, 0, sizeof (*info));
+  HANDLE process = GetCurrentProcess ();
+
+  static INIT_ONCE initOnce = INIT_ONCE_STATIC_INIT;
+
+  if (!InitOnceExecuteOnce (&initOnce, SymInitOnceCallback, NULL, NULL))
     {
       return 0;
     }
-  lpFilename -= strlen (root) / sizeof (*lpFilename);
-  memcpy (lpFilename, root, strlen (root));
-  nSize = 1;
 
-  hFile = CreateFile (lpFilename, GENERIC_READ,
-		      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		      NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-  if (hFile != INVALID_HANDLE_VALUE)
+  AcquireSRWLockShared (&g_dbghelp_lock);
+
+  DWORD64 displacement = 0;
+  BYTE symbolBuffer[sizeof (SYMBOL_INFO) + MAX_SYM_NAME * sizeof (char)] =
+    { 0 };
+  PSYMBOL_INFO symbol = (PSYMBOL_INFO) symbolBuffer;
+  symbol->SizeOfStruct = sizeof (SYMBOL_INFO);
+  symbol->MaxNameLen = MAX_SYM_NAME;
+
+  BOOL hasSymbol =
+    SymFromAddr (process, (DWORD64) (uintptr_t) addr, &displacement, symbol);
+
+  IMAGEHLP_MODULE64 moduleInfo = { 0 };
+  moduleInfo.SizeOfStruct = sizeof (moduleInfo);
+  BOOL hasModule =
+    SymGetModuleInfo64 (process, (DWORD64) (uintptr_t) addr, &moduleInfo);
+
+  ReleaseSRWLockShared (&g_dbghelp_lock);
+
+  if (!hasModule)
+    return 0;
+
+  info->dli_fname = _strdup (moduleInfo.ImageName);
+  if (!info->dli_fname)
+    return 0;
+  info->dli_fbase = (LPVOID) (uintptr_t) moduleInfo.BaseOfImage;
+
+  if (hasSymbol)
     {
-      nSize = GetFinalPathNameByHandle (hFile, 0, 0, VOLUME_NAME_DOS);
-
-      if (nSize != 0)
+      char demangled[MAX_SYM_NAME];
+      if (UnDecorateSymbolName
+	  (symbol->Name, demangled, sizeof (demangled),
+	   UNDNAME_COMPLETE | UNDNAME_NO_LEADING_UNDERSCORES))
 	{
-	  nSize++;
-	  lpszFilePath = (char *) malloc (nSize);
-	  if (!lpszFilePath || !GetFinalPathNameByHandle (hFile,
-							  lpszFilePath, nSize,
-							  VOLUME_NAME_DOS))
-	    {
-	      free (lpszFilePath);
-	      lpszFilePath = lpFilename;
-	    }
-	  else
-	    {
-	      free (lpFilename);
-	    }
+	  info->dli_sname = _strdup (demangled);
 	}
       else
 	{
-	  lpszFilePath = lpFilename;
+	  info->dli_sname = _strdup (symbol->Name);
 	}
-    }
-  else
-    {
-      lpszFilePath = lpFilename;
-    }
-
-  if (!VirtualQuery (addr, &lpBuffer, sizeof (lpBuffer)))
-    {
-      lpBuffer.AllocationBase = (void *) addr;
-    }
-
-  imageNtHeaders = ImageNtHeader (lpBuffer.AllocationBase);
-  imageExportDirectory =
-    (PIMAGE_EXPORT_DIRECTORY) ((size_t) lpBuffer.AllocationBase +
-			       imageNtHeaders->OptionalHeader.DataDirectory
-			       [IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);
-  if (imageExportDirectory->NumberOfNames <
-      imageExportDirectory->NumberOfFunctions)
-    {
-      NumberOfNames = imageExportDirectory->NumberOfNames;
-    }
-  else
-    {
-      NumberOfNames = imageExportDirectory->NumberOfFunctions;
-    }
-  AddressOfNames =
-    (DWORD *) ((size_t) lpBuffer.AllocationBase +
-	       imageExportDirectory->AddressOfNames);
-  AddressOfFunctions =
-    (DWORD *) ((size_t) lpBuffer.AllocationBase +
-	       imageExportDirectory->AddressOfFunctions);
-  AddressOfFunction = (size_t) addr - (size_t) lpBuffer.AllocationBase;
-  dli_sname = 0;
-  dli_saddr = 0;
-
-  for (i = 0; i != NumberOfNames; i++)
-    {
-      if (AddressOfFunctions[i] <= AddressOfFunction)
+      if (!info->dli_sname)
 	{
-	  dli_sname =
-	    (char *) ((size_t) lpBuffer.AllocationBase + AddressOfNames[i]);
-	  dli_saddr =
-	    (void *) ((size_t) lpBuffer.AllocationBase +
-		      AddressOfFunctions[i]);
-	  i = NumberOfNames - 1;
+	  free (info->dli_fname);
+	  info->dli_fname = NULL;
+	  return 0;
 	}
+      info->dli_saddr = (LPVOID) (uintptr_t) symbol->Address;
+    }
+  else
+    {
+      info->dli_sname = NULL;
+      info->dli_saddr = NULL;
     }
 
-  info->dli_fname = lpszFilePath;
-  info->dli_fbase = lpBuffer.AllocationBase;
-  info->dli_sname = dli_sname;
-  info->dli_saddr = dli_saddr;
-  SetLastError (dwErrCode);
   return 1;
 }
