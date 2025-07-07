@@ -12,10 +12,12 @@ extern "C" {
 
 /* Error codes for getaddrinfo */
 #define EAI_SUCCESS     0   /* Success */
-#define EAI_FAIL        4   /* Non-recoverable failure in name resolution */
 #define EAI_FAMILY      1   /* ai_family not supported */
-#define EAI_MEMORY      6   /* Memory allocation failure */
+#define EAI_AGAIN       2   /* Temporary failure in name resolution */
 #define EAI_NONAME      3   /* Name or service not known */
+#define EAI_FAIL        4   /* Non-recoverable failure in name resolution */
+#define EAI_BADFLAGS    5   /* Invalid value for ai_flags */
+#define EAI_MEMORY      6   /* Memory allocation failure */
 #define EAI_SERVICE     8   /* Servname not supported for ai_socktype */
 #define EAI_SOCKTYPE    10  /* ai_socktype not supported */
 
