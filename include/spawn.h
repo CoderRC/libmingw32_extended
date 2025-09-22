@@ -1,7 +1,10 @@
 /* spawn.h
 */
 #ifndef _SPAWN_H
-#define _SPAWN_H
+#ifdef __argv
+#define _SPAWN_H __argv
+#undef __argv
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -115,5 +118,11 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif				/* __cplusplus */
+
+#ifdef _SPAWN_H
+#define __argv _SPAWN_H
+#else
+#define _SPAWN_H
+#endif
 
 #endif				/* spawn.h */

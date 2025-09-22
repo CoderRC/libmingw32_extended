@@ -1,2 +1,6 @@
 .vscode
 build/
+source/poll.c
+include/poll.h
+.gitignore
+.ssh
