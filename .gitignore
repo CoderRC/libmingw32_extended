@@ -1,6 +1,5 @@
 .vscode
 build/
-source/poll.c
-include/poll.h
 .gitignore
 .ssh
+output.txt
