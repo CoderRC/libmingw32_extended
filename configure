@@ -24,6 +24,7 @@ SOURCES='
 \$(srcdir)/source/dlerror.c
 \$(srcdir)/source/dladdr.c
 \$(srcdir)/source/poll.c
+\$(srcdir)/source/ppoll.c
 \$(srcdir)/source/posix_spawn.c
 \$(srcdir)/source/posix_spawnp.c
 \$(srcdir)/source/posix_spawn_file_actions_addclose.c
