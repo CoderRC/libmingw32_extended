@@ -93,12 +93,14 @@ SOURCES='
 \$(srcdir)/source/socket.c
 \$(srcdir)/source/socketpair.c
 \$(srcdir)/source/gai_strerror.c
-\$(srcdir)/source/test_all_netdb.c
 \$(srcdir)/source/aio_cancel.c
 \$(srcdir)/source/aio_error.c
+\$(srcdir)/source/aio_fsync.c
 \$(srcdir)/source/aio_read.c
-\$(srcdir)/source/aio_write.c
 \$(srcdir)/source/aio_return.c
+\$(srcdir)/source/aio_suspend.c
+\$(srcdir)/source/aio_write.c
+\$(srcdir)/source/lio_listio.c
 '
 INCLUDE_DIRECTORIES='
 include
@@ -118,6 +120,7 @@ include/spawn.h
 include/netdb.h
 include/poll.h
 include/aio.h
+include/endian.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
