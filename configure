@@ -104,6 +104,11 @@ SOURCES='
 \$(srcdir)/source/fmtmsg.c
 \$(srcdir)/source/fnmatch.c
 \$(srcdir)/source/glob.c
+\$(srcdir)/source/getgrent.c
+\$(srcdir)/source/getgrgid.c
+\$(srcdir)/source/getgrnam.c
+\$(srcdir)/source/nl_langinfo.c
+\$(srcdir)/source/nl_langinfo_l.c
 '
 INCLUDE_DIRECTORIES='
 include
@@ -127,6 +132,8 @@ include/endian.h
 include/fmtmsg.h
 include/fnmatch.h
 include/glob.h
+include/grp.h
+include/langinfo.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
