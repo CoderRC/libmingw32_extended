@@ -102,6 +102,8 @@ SOURCES='
 \$(srcdir)/source/aio_write.c
 \$(srcdir)/source/lio_listio.c
 \$(srcdir)/source/fmtmsg.c
+\$(srcdir)/source/fnmatch.c
+\$(srcdir)/source/glob.c
 '
 INCLUDE_DIRECTORIES='
 include
@@ -123,6 +125,8 @@ include/poll.h
 include/aio.h
 include/endian.h
 include/fmtmsg.h
+include/fnmatch.h
+include/glob.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
