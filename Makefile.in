@@ -68,7 +68,7 @@ RPATH_ENVVAR =@RPATH_ENVVAR@
 # -------------------------------------------------
 CC=@CC@
 DEFS=@DEFS@
-DEFAULT_INCLUDES=-I@srcdir@/include
+DEFAULT_INCLUDES=-I@srcdir@/include -I@srcdir@/source
 INCLUDES=$(notdir null/)
 CPPFLAGS=@CPPFLAGS@
 CFLAGS=@CFLAGS@
@@ -90,10 +90,10 @@ all: compile_objects compile_library compile_include
 
 compile_objects: obj $(OBJECTS)
 
-$(wildcard $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES))))): %.$(OBJEXT): source/%.c
+$(wildcard $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES))))): %.$(OBJEXT): source/%.c source/__436F64657252436C69626D696E677733325F657874656E646564.h
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(filter-out $(addprefix obj/, $(wildcard $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES)))))), $(addprefix obj/, $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES)))))): obj/%.$(OBJEXT): source/%.c
+$(filter-out $(addprefix obj/, $(wildcard $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES)))))), $(addprefix obj/, $(addsuffix .$(OBJEXT),$(basename $(notdir $(SOURCES)))))): obj/%.$(OBJEXT): source/%.c source/__436F64657252436C69626D696E677733325F657874656E646564.h
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 obj:
