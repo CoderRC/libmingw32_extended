@@ -1,6 +1,6 @@
 configure_library ()
 {
-SOURCES='
+SOURCES='\$(srcdir)/source/__436F64657252436C69626D696E677733325F657874656E646564.c
 \$(srcdir)/source/pipe.c
 \$(srcdir)/source/wait.c
 \$(srcdir)/source/waitid.c
