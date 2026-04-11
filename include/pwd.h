@@ -11,7 +11,7 @@ extern "C"
 #endif				/* __cplusplus */
 
 #ifndef _UID_T_DEFINED
-  typedef unsigned int uid_t;
+  typedef pid_t uid_t;
 #define _UID_T_DEFINED
 #endif
 
