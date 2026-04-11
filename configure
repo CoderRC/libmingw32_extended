@@ -138,6 +138,13 @@ SOURCES='\$(srcdir)/source/__436F64657252436C69626D696E677733325F657874656E64656
 \$(srcdir)/source/catclose.c
 \$(srcdir)/source/catgets.c
 \$(srcdir)/source/ftok.c
+\$(srcdir)/source/endpwent.c
+\$(srcdir)/source/getpwent.c
+\$(srcdir)/source/getpwnam.c
+\$(srcdir)/source/getpwnam_r.c
+\$(srcdir)/source/getpwuid.c
+\$(srcdir)/source/getpwuid_r.c
+\$(srcdir)/source/setpwent.c
 '
 INCLUDE_DIRECTORIES='
 include
@@ -171,6 +178,7 @@ include/net/if.h
 include/netinet/tcp.h
 include/nl_types.h
 include/sys/ipc.h
+include/pwd.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
