@@ -5,6 +5,7 @@
 extern "C"
 {
 #endif
+#include <stddef.h>
 
 /*
  * Thread-safe shared struct state for global operations
@@ -21,10 +22,16 @@ extern "C"
  * 4. Perform initialization
  * 5. __436F64657252436C69626D696E677733325F657874656E646564_unlock
  */
+  struct passwd;
   struct __436F64657252436C69626D696E677733325F657874656E646564
   {
     /* DLL handle - NULL means not initialized */
     void *ws2_32_handle;
+    void *netapi32_handle;
+    /* Iteration state for getpwent() */
+    size_t passwd_index;
+    /* Persistent storage */
+    struct passwd * current_passwd;
   };
 
 /* Global shared state variable - initialized to 0 by default */
