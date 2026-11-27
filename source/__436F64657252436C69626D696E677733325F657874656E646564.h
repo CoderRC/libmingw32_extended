@@ -32,6 +32,12 @@ extern "C"
     size_t passwd_index;
     /* Persistent storage */
     struct passwd * current_passwd;
+    /* sys/msg.h: shared queue table - NULL means not attached */
+    void *msg_table;
+    void *msg_file_handle;
+    void *msg_mapping_handle;
+    void *msg_mutex_handle;
+    void *msg_event_handle;
   };
 
 /* Global shared state variable - initialized to 0 by default */
