@@ -14,6 +14,10 @@ SOURCES='\$(srcdir)/source/__436F64657252436C69626D696E677733325F657874656E64656
 \$(srcdir)/source/madvise.c
 \$(srcdir)/source/shm_open.c
 \$(srcdir)/source/shm_unlink.c
+\$(srcdir)/source/shmat.c
+\$(srcdir)/source/shmctl.c
+\$(srcdir)/source/shmdt.c
+\$(srcdir)/source/shmget.c
 \$(srcdir)/source/readv.c
 \$(srcdir)/source/writev.c
 \$(srcdir)/source/process_vm_readv.c
@@ -155,6 +159,7 @@ include/net
 '
 INCLUDE_FILES='
 include/sys/mman.h
+include/sys/shm.h
 include/netinet/in.h
 include/arpa/inet.h
 include/sys/uio.h

@@ -30,6 +30,13 @@ extern "C"
     void *netapi32_handle;
     /* Iteration state for getpwent() */
     size_t passwd_index;
+    /* sys/shm.h: shared segment table - NULL means not attached */
+    void *shm_table;
+    void *shm_file_handle;
+    void *shm_mapping_handle;
+    void *shm_mutex_handle;
+    /* sys/shm.h: this process's attachments (SHMSEG entries) */
+    void *shm_attached;
     /* Persistent storage */
     struct passwd * current_passwd;
   };
