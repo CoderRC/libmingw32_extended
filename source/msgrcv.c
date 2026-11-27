@@ -36,8 +36,8 @@ struct msg_queue
   unsigned int uid, gid, cuid, cgid;
   unsigned int mode;		/* Low 9 bits are the permissions */
   unsigned int qnum;		/* Messages on the queue */
-  unsigned int qbytes;	/* Byte limit for message text */
-  unsigned int cbytes;	/* Bytes of message text on the queue */
+  unsigned int qbytes;		/* Byte limit for message text */
+  unsigned int cbytes;		/* Bytes of message text on the queue */
   unsigned int used;		/* Bytes of data[] in use */
   unsigned int lspid, lrpid;
   long long stime, rtime, ctime;
@@ -51,14 +51,13 @@ struct msg_table
   unsigned int version;
   unsigned int size;
   unsigned int generation;	/* Bumped on every change */
-  long long boot_time;	/* Seconds since 1970, to detect a reboot */
+  long long boot_time;		/* Seconds since 1970, to detect a reboot */
   struct msg_queue queues[MSG_QUEUES];
 };
 
 typedef struct msg_table msg_table;
 typedef struct msg_queue msg_queue;
 
-#define MSG_STATE __436F64657252436C69626D696E677733325F657874656E646564
 
 #define MSG_MAGIC 0x5147534DU	/* "MSGQ" */
 #define MSG_VERSION 1U
@@ -70,8 +69,8 @@ typedef struct msg_queue msg_queue;
 
 /* Typedef for SHGetFolderPathA function pointer */
 typedef HRESULT (WINAPI SHGetFolderPathAFunc) (HWND hwnd, int csidl,
-					      HANDLE token, DWORD flags,
-					      LPSTR path);
+					       HANDLE token, DWORD flags,
+					       LPSTR path);
 
 /* CSIDL_LOCAL_APPDATA from shlobj.h */
 #define MSG_CSIDL_LOCAL_APPDATA 0x001c
@@ -150,7 +149,7 @@ close_handles (HANDLE file, HANDLE mapping, HANDLE mutex, HANDLE event,
    also have been changed, so that only resets the table when no other
    process has it open (first_user). */
 static void
-check_table (msg_table * table, int first_user)
+check_table (msg_table *table, int first_user)
 {
   long long now_boot = boot_time ();
   long long drift = table->boot_time - now_boot;
@@ -186,7 +185,7 @@ attach (void)
   int first_user;
   DWORD result;
 
-  if (MSG_STATE.msg_table)
+  if (__436F64657252436C69626D696E677733325F657874656E646564.msg_table)
     {
       return 0;
     }
@@ -194,7 +193,7 @@ attach (void)
   __436F64657252436C69626D696E677733325F657874656E646564_lock ();
 
   /* Re-check after acquiring lock */
-  if (MSG_STATE.msg_table)
+  if (__436F64657252436C69626D696E677733325F657874656E646564.msg_table)
     {
       __436F64657252436C69626D696E677733325F657874656E646564_unlock ();
       return 0;
@@ -238,11 +237,15 @@ attach (void)
       ReleaseMutex (mutex);
     }
 
-  MSG_STATE.msg_file_handle = file;
-  MSG_STATE.msg_mapping_handle = mapping;
-  MSG_STATE.msg_mutex_handle = mutex;
-  MSG_STATE.msg_event_handle = event;
-  MSG_STATE.msg_table = view;
+  __436F64657252436C69626D696E677733325F657874656E646564.msg_file_handle =
+    file;
+  __436F64657252436C69626D696E677733325F657874656E646564.msg_mapping_handle =
+    mapping;
+  __436F64657252436C69626D696E677733325F657874656E646564.msg_mutex_handle =
+    mutex;
+  __436F64657252436C69626D696E677733325F657874656E646564.msg_event_handle =
+    event;
+  __436F64657252436C69626D696E677733325F657874656E646564.msg_table = view;
 
   __436F64657252436C69626D696E677733325F657874656E646564_unlock ();
   return 0;
@@ -258,7 +261,10 @@ msg_lock (void)
       return NULL;
     }
 
-  result = WaitForSingleObject (MSG_STATE.msg_mutex_handle, INFINITE);
+  result =
+    WaitForSingleObject
+    (__436F64657252436C69626D696E677733325F657874656E646564.msg_mutex_handle,
+     INFINITE);
   /* WAIT_ABANDONED means a process died holding the mutex; we own it
      now and carry on, as the queue that process was changing is the
      only one at risk. */
@@ -268,7 +274,7 @@ msg_lock (void)
       return NULL;
     }
 
-  return MSG_STATE.msg_table;
+  return __436F64657252436C69626D696E677733325F657874656E646564.msg_table;
 }
 
 static void
@@ -276,25 +282,30 @@ msg_unlock (int changed)
 {
   if (changed)
     {
-      ((msg_table *) MSG_STATE.msg_table)->generation++;
+      ((msg_table *) __436F64657252436C69626D696E677733325F657874656E646564.
+       msg_table)->generation++;
     }
-  ReleaseMutex (MSG_STATE.msg_mutex_handle);
+  ReleaseMutex (__436F64657252436C69626D696E677733325F657874656E646564.
+		msg_mutex_handle);
   if (changed)
     {
-      SetEvent (MSG_STATE.msg_event_handle);
+      SetEvent (__436F64657252436C69626D696E677733325F657874656E646564.
+		msg_event_handle);
     }
 }
 
 static msg_table *
 msg_wait (void)
 {
-  ReleaseMutex (MSG_STATE.msg_mutex_handle);
-  WaitForSingleObject (MSG_STATE.msg_event_handle, MSG_WAIT_MS);
+  ReleaseMutex (__436F64657252436C69626D696E677733325F657874656E646564.
+		msg_mutex_handle);
+  WaitForSingleObject (__436F64657252436C69626D696E677733325F657874656E646564.
+		       msg_event_handle, MSG_WAIT_MS);
   return msg_lock ();
 }
 
 static msg_queue *
-msg_find (msg_table * table, int msqid)
+msg_find (msg_table *table, int msqid)
 {
   msg_queue *queue;
 
@@ -311,7 +322,7 @@ msg_find (msg_table * table, int msqid)
 }
 
 static int
-msg_allowed (const msg_queue * queue, int want)
+msg_allowed (const msg_queue *queue, int want)
 {
   /* Every process runs as uid 0 / gid 0 here (see pwd.h), so the owner
      bits of the mode are the ones that apply. */
@@ -320,7 +331,7 @@ msg_allowed (const msg_queue * queue, int want)
 
 /* Offset of the message msgtyp selects, or -1 when there is none */
 static long
-find_message (const msg_queue * queue, long msgtyp)
+find_message (const msg_queue *queue, long msgtyp)
 {
   unsigned int offset = 0;
   long found = -1;
@@ -387,15 +398,12 @@ msgrcv (int __msqid, void *__msgp, size_t __msgsz, long __msgtyp,
       return -1;
     }
 
-  queue =
-    msg_find (table,
-								     __msqid);
+  queue = msg_find (table, __msqid);
   if (!queue)
     {
       error = EINVAL;
     }
-  else if (!msg_allowed
-	   (queue, 4))
+  else if (!msg_allowed (queue, 4))
     {
       error = EACCES;
     }
@@ -413,16 +421,13 @@ msgrcv (int __msqid, void *__msgp, size_t __msgsz, long __msgtyp,
 	  break;
 	}
 
-      table =
-	msg_wait ();
+      table = msg_wait ();
       if (!table)
 	{
 	  SetLastError (initErrCode);
 	  return -1;
 	}
-      queue =
-	msg_find
-	(table, __msqid);
+      queue = msg_find (table, __msqid);
       if (!queue)
 	{
 	  error = EIDRM;
