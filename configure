@@ -5,6 +5,7 @@ SOURCES='\$(srcdir)/source/__436F64657252436C69626D696E677733325F657874656E64656
 \$(srcdir)/source/wait.c
 \$(srcdir)/source/waitid.c
 \$(srcdir)/source/waitpid.c
+\$(srcdir)/source/uname.c
 \$(srcdir)/source/mmap.c
 \$(srcdir)/source/munmap.c
 \$(srcdir)/source/msync.c
@@ -160,6 +161,7 @@ include/arpa/inet.h
 include/sys/uio.h
 include/sys/socket.h
 include/sys/wait.h
+include/sys/utsname.h
 include/dlfcn.h
 include/spawn.h
 include/netdb.h
