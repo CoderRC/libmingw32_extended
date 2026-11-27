@@ -145,6 +145,11 @@ SOURCES='\$(srcdir)/source/__436F64657252436C69626D696E677733325F657874656E64656
 \$(srcdir)/source/getpwuid.c
 \$(srcdir)/source/getpwuid_r.c
 \$(srcdir)/source/setpwent.c
+\$(srcdir)/source/__436F64657252436C69626D696E677733325F657874656E646564_msg.c
+\$(srcdir)/source/msgctl.c
+\$(srcdir)/source/msgget.c
+\$(srcdir)/source/msgrcv.c
+\$(srcdir)/source/msgsnd.c
 '
 INCLUDE_DIRECTORIES='
 include
@@ -179,6 +184,7 @@ include/netinet/tcp.h
 include/nl_types.h
 include/sys/ipc.h
 include/pwd.h
+include/sys/msg.h
 '
 ac_subst_vars=$ac_subst_vars'
 SOURCES
