@@ -13,8 +13,10 @@ typedef int key_t;
 #define _KEY_T_DEFINED
 #endif
 
+/* Same uid_t as pwd.h, so struct ipc_perm and struct passwd agree
+   whichever header is included first */
 #ifndef _UID_T_DEFINED
-typedef unsigned int uid_t;
+typedef pid_t uid_t;
 #define _UID_T_DEFINED
 #endif
 
