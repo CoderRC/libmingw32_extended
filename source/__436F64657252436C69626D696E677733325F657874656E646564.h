@@ -25,6 +25,14 @@ extern "C"
   struct passwd;
   struct __436F64657252436C69626D696E677733325F657874656E646564
   {
+    /* sys/sem.h: shared semaphore table - NULL means not attached */
+    void *sem_table;
+    void *sem_file_handle;
+    void *sem_mapping_handle;
+    void *sem_mutex_handle;
+    void *sem_event_handle;
+    /* sys/sem.h: non-zero once the SEM_UNDO exit handler is set */
+    int sem_undo_at_exit;
     /* DLL handle - NULL means not initialized */
     void *ws2_32_handle;
     void *netapi32_handle;

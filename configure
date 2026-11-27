@@ -23,6 +23,9 @@ SOURCES='\$(srcdir)/source/__436F64657252436C69626D696E677733325F657874656E64656
 \$(srcdir)/source/dlsym.c
 \$(srcdir)/source/dlerror.c
 \$(srcdir)/source/dladdr.c
+\$(srcdir)/source/semctl.c
+\$(srcdir)/source/semget.c
+\$(srcdir)/source/semop.c
 \$(srcdir)/source/poll.c
 \$(srcdir)/source/ppoll.c
 \$(srcdir)/source/posix_spawn.c
@@ -164,6 +167,7 @@ include/dlfcn.h
 include/spawn.h
 include/netdb.h
 include/poll.h
+include/sys/sem.h
 include/aio.h
 include/endian.h
 include/fmtmsg.h
